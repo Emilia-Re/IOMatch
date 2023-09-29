@@ -22,7 +22,7 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     name = name.split('_')[0]  # cifar10_openset -> cifar10
     data_dir = os.path.join(data_dir, name.lower())
     dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, train=True, download=False)
+    dset = dset(data_dir, train=True, download=True)
     data, targets = dset.data, dset.targets
 
     crop_size = args.img_size
@@ -88,7 +88,7 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_all_classes, transform_weak, True, transform_strong, False)
 
     dset = getattr(torchvision.datasets, name.upper())
-    dset = dset(data_dir, train=False, download=False)
+    dset = dset(data_dir, train=False, download=True)
     test_data, test_targets = dset.data, reassign_target(dset.targets, num_all_classes, seen_classes)
     seen_indices = np.where(test_targets < num_classes)[0]
     eval_dset = BasicDataset(alg, test_data[seen_indices], test_targets[seen_indices],
