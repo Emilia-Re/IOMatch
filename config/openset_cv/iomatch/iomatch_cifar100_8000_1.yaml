@@ -1,6 +1,6 @@
 algorithm: iomatch
 save_dir: ./saved_models/openset_cv
-save_name: iomatch_cifar100_2000_1
+save_name: iomatch_cifar100_8000_1
 resume: True
 load_path: ./saved_models/openset_cv/iomatch_cifar100_2000_1/latest_model.pth
 overwrite: True
