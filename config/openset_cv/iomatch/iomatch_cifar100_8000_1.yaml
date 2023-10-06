@@ -5,10 +5,10 @@ resume: True
 load_path: ./saved_models/openset_cv/iomatch_cifar100_2000_1/latest_model.pth
 overwrite: True
 use_tensorboard: True
-epoch: 1024
+epoch: 850
 num_train_iter: 262144
 num_eval_iter: 1024
-num_labels: 8000
+num_labels: 80
 batch_size: 64
 eval_batch_size: 256
 p_cutoff: 0.95
