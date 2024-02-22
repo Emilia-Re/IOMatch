@@ -69,6 +69,11 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 # CIFAR100, seen/unseen split of 80/20, 4 labels per seen class (CIFAR-100-320), seed = 1    
 CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cifar100_320_1.yaml
 ```
+### Training with semi-supervised learning 
+```shell
+CUDA_VISIBLE_DEVICES=1 python train.py --c config/openset_cv/fixmatch/fixmatch_cifar100_2000_1.yaml
+```
+
 
 ### Evaluation
 
