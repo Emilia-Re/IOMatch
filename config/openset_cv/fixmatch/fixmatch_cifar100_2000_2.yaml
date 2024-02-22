@@ -6,7 +6,7 @@ load_path: ./saved_models/openset_cv/fixmatch_cifar100_2000_2/latest_model.pth
 overwrite: True
 use_tensorboard: True
 # epoch 256
-epoch:1
+epoch: 1
 #num_train_iter: 262144
 num_train_iter: 1
 #num_eval_iter: 1024
