@@ -227,20 +227,20 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
 
         return eval_dict
 
-
-args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_200_1.yaml'])
+args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_8000_1.yaml'])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
 dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
 best_net = load_model_at('best')
 eval_dict = evaluate_io(args, best_net, dataset_dict)
 
-args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_1250_1.yaml'])
-over_write_args_from_file(args, args.c)
-args.data_dir = 'data'
-dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
-best_net = load_model_at('best')
-eval_dict = evaluate_io(args, best_net, dataset_dict)
+#下边这个暂时用不到
+# args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_1250_1.yaml'])
+# over_write_args_from_file(args, args.c)
+# args.data_dir = 'data'
+# dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
+# best_net = load_model_at('best')
+# eval_dict = evaluate_io(args, best_net, dataset_dict)
 
 
 # Confusion matrix of closed-set classification
