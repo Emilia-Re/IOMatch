@@ -71,9 +71,9 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 ```
 ### Training with semi-supervised learning 
 ```shell
-CUDA_VISIBLE_DEVICES=1 python train.py --c config/openset_cv/fixmatch/fixmatch_cifar100_2000_2.yaml
+CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/fixmatch/fixmatch_cifar100_2000_2.yaml
 
-CUDA_VISIBLE_DEVICES=1 python train.py --c config/openset_cv/iomatch/iomatch_cifar100_8000_1.yaml
+CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cifar100_2000_1.yaml
 ```
 
 

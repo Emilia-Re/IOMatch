@@ -95,8 +95,8 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
             dset.targets = dset.targets + num_existing_classes
             num_existing_classes += dset.num_classes
             ood_dsets.append(dset)
-        test_dset['extended'] = ConcatDataset(ood_dsets)
-        test_dset['ood_dsets'] = ood_dsets
+        test_dset['extended'] = ConcatDataset(ood_dsets)  # test_dset['extended']是指额外的ood数据集（不包含原来的测试集自身）
+        test_dset['ood_dsets'] = ood_dsets  #test_dset['ood_dsets'] 是一个列标，里边有利用到的所有的ood的数据集（每个ood的数据集中的数据都是已经筛选出来的）
 
     dataset_dict = {'train_lb': lb_dset, 'train_ulb': ulb_dset, 'eval': eval_dset, 'test': test_dset}
     return dataset_dict

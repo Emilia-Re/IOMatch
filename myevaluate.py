@@ -99,7 +99,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
             pred_p = p.data.max(1)[1]
             pred_p_list.extend(pred_p.cpu().tolist())
 
-            # predictions hat_q from (closed-set + multi-binary) classifiers
+            # predictions hat_q from (closed-set + multi-binary) classifiers   #这是本文iomatch提出的方法
             r = F.softmax(logits_mb.view(logits_mb.size(0), 2, -1), 1)
             tmp_range = torch.arange(0, logits_mb.size(0)).long().cuda()
             hat_q = torch.zeros((num_batch, args.num_classes + 1)).cuda()
@@ -110,13 +110,13 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
             pred_hat_q = hat_q.data.max(1)[1]
             pred_hat_q_list.extend(pred_hat_q.cpu().tolist())
 
-            # predictions q of open-set classifier
+            # predictions q of open-set classifier   #这是论文配图中下边的那个开放集分类头
             q = F.softmax(logits_open, 1)
             pred_q = q.data.max(1)[1]
             pred_q_list.extend(pred_q.cpu().tolist())
 
             # prediction hat_p of open-set classifier
-            hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)
+            hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)#归一化
             pred_hat_p = hat_p.data.max(1)[1]
             pred_hat_p_list.extend(pred_hat_p.cpu().tolist())
 
@@ -140,7 +140,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
 
         # open accuracy of q / hat_q on full test data
         o_acc_f_q = balanced_accuracy_score(y_true, pred_q)
-        o_acc_f_hq = balanced_accuracy_score(y_true, pred_hat_q)
+        o_acc_f_hq = balanced_accuracy_score(y_true, pred_hat_q)#iomatch方法得到的精确度，对于开机集样本，如果被分到闭集，则认为是分错了
         o_cfmat_f_q = confusion_matrix(y_true, pred_q, normalize='true')
         o_cfmat_f_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
 
@@ -148,6 +148,8 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         o_cfmat_e_q = None
         o_cfmat_e_hq = None
 
+
+        #这里的
         if extended_test:
             unk_scores = []
             unk_scores_q = []
@@ -193,7 +195,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
                 pred_q_list.extend(pred_q.cpu().tolist())
 
                 # prediction hat_p of open-set classifier
-                hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)
+                hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)#（不太确定）和上边的方式相比，只是归一化方式不同，上边是softmax归一化，下边是直接除以他们的和进行归一
                 pred_hat_p = hat_p.data.max(1)[1]
                 pred_hat_p_list.extend(pred_hat_p.cpu().tolist())
 
@@ -227,12 +229,14 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
 
         return eval_dict
 
-args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_8000_1.yaml'])
+args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_2000_1.yaml'])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
 dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
 best_net = load_model_at('best')
 eval_dict = evaluate_io(args, best_net, dataset_dict)
+#默认设置     cifar100_2000   seen/unseen split of 80/20, 25 labels per seen class
+
 
 #下边这个暂时用不到
 # args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_1250_1.yaml'])

@@ -57,6 +57,7 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     elif name == 'cifar100':
         num_super_classes = num_classes // 5  # args.num_super_classes
         num_all_classes = 100
+        #给每个类比赋予一个超类标签，比如说super_classes[0]的值是4，就代表细粒度类别为0的类，超类标签为4
         super_classes = np.array([4, 1, 14, 8, 0, 6, 7, 7, 18, 3,
                                   3, 14, 9, 18, 7, 11, 3, 9, 7, 11,
                                   6, 11, 5, 10, 7, 6, 13, 15, 3, 15,
@@ -67,7 +68,7 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
                                   2, 10, 0, 1, 16, 12, 9, 13, 15, 13,
                                   16, 19, 2, 4, 6, 19, 5, 5, 8, 19,
                                   18, 1, 2, 15, 6, 0, 17, 8, 14, 13])
-        seen_classes = set(np.arange(num_all_classes)[super_classes < num_super_classes])
+        seen_classes = set(np.arange(num_all_classes)[super_classes < num_super_classes])#定义前xx个超类为已知类
     else:
         raise NotImplementedError
 
@@ -94,4 +95,5 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     eval_dset = BasicDataset(alg, test_data[seen_indices], test_targets[seen_indices],
                              len(seen_classes), transform_val, False, None, False)
     test_full_dset = BasicDataset(alg, test_data, test_targets, num_all_classes, transform_val, False, None, False)
-    return lb_dset, ulb_dset, eval_dset, test_full_dset
+    return lb_dset, ulb_dset, eval_dset, test_full_dset #eval_dset是测试集中所有inlier组成的
+    #eval dataset和test_full_dataset的区别：eval dataset是测试集中所有inlier数据组成的，而test_full_dataset中既包含inlier，也包含ood
