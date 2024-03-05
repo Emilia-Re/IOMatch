@@ -1,8 +1,9 @@
+#简单组    6个动物类作为已知类，其他作为未知类。在不同组中每个类的标记样本分别设置为50，200，1000，原始cifar10测试集作为测试集
 algorithm: iomatch
-save_dir: ./saved_models/openset_cv
-save_name: iomatch_cifar10_24_0
+save_dir: ./saved_models/openset_cv/jhy_experiment
+save_name: iomatch_cifar10_50_0
 resume: False
-load_path: ./saved_models/openset_cv/iomatch_cifar10_24_0/latest_model.pth
+load_path: ./saved_models/openset_cv/jhy_experiment/iomatch_cifar10_24_0/latest_model.pth
 overwrite: True
 use_tensorboard: True
 #epoch: 256
@@ -11,7 +12,7 @@ use_tensorboard: True
 epoch: 1
 num_train_iter: 1
 num_eval_iter: 1
-num_labels: 24
+num_labels: 300
 batch_size: 64
 eval_batch_size: 256
 p_cutoff: 0.95
@@ -40,7 +41,7 @@ num_workers: 1
 seed: 0
 world_size: 1
 rank: 0
-multiprocessing_distributed: False
+multiprocessing_distributed: True
 dist_url: tcp://127.0.0.1:10008
 dist_backend: nccl
 gpu: None
