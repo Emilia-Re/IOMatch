@@ -155,7 +155,7 @@ def split_ossl_data(args, data, target, num_labels, num_all_classes, seen_classe
     target = reassign_target(target, num_all_classes, seen_classes)
     lb_data, lbs, lb_idx, = sample_labeled_data(args, data, target, num_labels, len(seen_classes), index)
     ulb_idx = np.array(sorted(list(set(range(len(data))) - set(lb_idx))))  # unlabeled_data index of data
-    if include_lb_to_ulb:
+    if include_lb_to_ulb:  #这里的意思是如果为真，则把所有的标记数据也加入到未标记数据中
         return lb_data, lbs, data, target
     else:
         return lb_data, lbs, data[ulb_idx], target[ulb_idx]

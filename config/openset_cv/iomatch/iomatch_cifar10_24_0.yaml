@@ -5,9 +5,12 @@ resume: True
 load_path: ./saved_models/openset_cv/iomatch_cifar10_24_0/latest_model.pth
 overwrite: True
 use_tensorboard: True
-epoch: 256
-num_train_iter: 262144
-num_eval_iter: 1024
+#epoch: 256
+#num_train_iter: 262144
+#num_eval_iter: 1024
+epoch: 1
+num_train_iter: 1
+num_eval_iter: 1
 num_labels: 24
 batch_size: 64
 eval_batch_size: 256
@@ -37,7 +40,7 @@ num_workers: 1
 seed: 0
 world_size: 1
 rank: 0
-multiprocessing_distributed: True
+multiprocessing_distributed: False
 dist_url: tcp://127.0.0.1:10008
 dist_backend: nccl
 gpu: None
