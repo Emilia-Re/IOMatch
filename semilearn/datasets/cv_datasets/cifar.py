@@ -52,8 +52,15 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     ])
 
     if name == 'cifar10':
-        seen_classes = set(range(2, 8))
-        num_all_classes = 10
+        if args.exp_group=='cifar10_hard':
+            assert args.exp_group=='cifar10_hard'
+            #困难组      已知类：飞机、鹿、猫、汽车、青蛙、船
+	                    #未知类： 鸟、马、狗、卡车
+            seen_classes=set([0,1,3,4,6,8])  #飞机，汽车，猫，鹿，青蛙，船
+            num_all_classes = 10
+        else:  #简单组2-6的动物类作为已知类
+            seen_classes = set(range(2, 8))
+            num_all_classes = 10
     elif name == 'cifar100':
         num_super_classes = num_classes // 5  # args.num_super_classes
         num_all_classes = 100

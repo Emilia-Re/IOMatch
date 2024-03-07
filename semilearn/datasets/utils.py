@@ -133,6 +133,7 @@ def sample_labeled_unlabeled_data(args, data, target, num_classes,
 def reassign_target(target, num_all_classes, seen_classes):
     #将数据集中的标签重新编号，先编已知类，在编未知类
     #如cifar100分为80已知类和20未知类，那么已知类被重新编号为0-79，未知类被重新编号为80-99
+    #根据seen_classes出现的先后顺序重新编号，对于困难组seen_classes原始编号为[0,1,3,4,6,8]，之后更改为0,1,2,3,4,5,对于unseen_classes，原始为2,5,7,9，之后都为6，7，8，9
     target = np.array(target)
 
     all_classes = set(range(num_all_classes))
