@@ -128,6 +128,9 @@ def get_config():
                              'N processes per node, which has N GPUs. This is the '
                              'fastest way to use PyTorch for either single node or '
                              'multi node data parallel training')
+    #实验组别设置
+    parser.add_argument('--exp_group', default='cifar10_easy', type=str,
+                        help='实验组别设置,目前只针对cifar10数据集')
     # config file
     parser.add_argument('--c', type=str, default='')
 

@@ -1,18 +1,17 @@
-#困难组
 algorithm: iomatch
-save_dir: ./saved_models/openset_cv/jhy_experiment
-save_name: iomatch_cifar10_300_0_hard
+save_dir: ./saved_models/test
+save_name: iomatch_cifar10_24_0_test
 resume: False
-load_path: ./saved_models/openset_cv/jhy_experiment/iomatch_cifar10_300_0_hard/latest_model.pth
+load_path: ./saved_models/test/iomatch_cifar10_24_0_test/latest_model.pth
 overwrite: True
 use_tensorboard: True
 #epoch: 256
 #num_train_iter: 262144
 #num_eval_iter: 1024
-epoch: 2
-num_train_iter: 2
-num_eval_iter: 2
-num_labels: 300
+epoch: 1
+num_train_iter: 1
+num_eval_iter: 1
+num_labels: 24
 batch_size: 64
 eval_batch_size: 256
 p_cutoff: 0.95
@@ -45,4 +44,3 @@ multiprocessing_distributed: False
 dist_url: tcp://127.0.0.1:10008
 dist_backend: nccl
 gpu: None
-exp_group: cifar10_hard

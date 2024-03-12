@@ -138,6 +138,7 @@ def reassign_target(target, num_all_classes, seen_classes):
 
     all_classes = set(range(num_all_classes))
     unseen_classes = all_classes - seen_classes
+    unseen_classes=sorted(unseen_classes) #将unseen_classes的原始标签从小到大排列
     targets_new = np.ones_like(target) * (-1)  # assign new labels for OSSL, first k classes are seen-class
 
     for i, lbi in enumerate(seen_classes):
