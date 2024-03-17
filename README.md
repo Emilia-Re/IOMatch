@@ -45,9 +45,14 @@ IOMatch
 
 The out-of-dataset testing data for extended open-set evaluation can be downloaded in [this link](https://drive.google.com/drive/folders/1IjDLYfpfsMVuzf_NmqQPoHDH0KAd94gn?usp=sharing).
 
+## Warning
+跑困难组实验前一定要把缓存的labeld_idx.npy缓存文件删除了。（先跑完困难组在跑简单组同理，也要把缓存的文件删了）
+ 该文件是每次实验中选取的标记数据。
 ## Usage
 
 We implement [IOMatch](./semilearn/algorithms/iomatch/iomatch.py) using the codebase of [USB](https://github.com/microsoft/Semi-supervised-learning).
+
+
 
 ### Training
 
