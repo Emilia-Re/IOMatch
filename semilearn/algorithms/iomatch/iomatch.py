@@ -38,7 +38,7 @@ class IOMatchNet(nn.Module):
         feat = self.backbone(x, only_feat=True)
         logits = self.backbone(feat, only_fc=True)
         feat_proj = self.mlp_proj(feat)
-        logits_open = self.openset_classifier(feat_proj)  # (k+1)-way logits
+        logits_open = self.openset_classifier(feat_proj)  # (k+1)-way logits   论文中的ψ （psi）
         logits_mb = self.mb_classifiers(feat_proj)  # shape: [bsz, 2K]
 
         return_dict = {'feat': feat, 'feat_proj': feat_proj,

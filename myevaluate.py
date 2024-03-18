@@ -57,7 +57,7 @@ def load_model_at(step='best'):
 
     return net
 
-def evaluate_io(args, net, dataset_dict, extended_test=True):
+def evaluate_io(args, net, dataset_dict, extended_test=False):
     """
     evaluation function for open-set SSL setting
     """
@@ -100,31 +100,32 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
             pred_p_list.extend(pred_p.cpu().tolist())
 
             # predictions hat_q from (closed-set + multi-binary) classifiers   #这是本文iomatch提出的方法
+            #hat_q就是文中的q tilder，是K+1的分布，是logits
             r = F.softmax(logits_mb.view(logits_mb.size(0), 2, -1), 1)
             tmp_range = torch.arange(0, logits_mb.size(0)).long().cuda()
             hat_q = torch.zeros((num_batch, args.num_classes + 1)).cuda()
             o_neg = r[tmp_range, 0, :]
             o_pos = r[tmp_range, 1, :]
-            hat_q[:, :args.num_classes] = p * o_pos
+            hat_q[:, :args.num_classes] = p * o_pos #核心方法，对应论文中fig 2
             hat_q[:, args.num_classes] = torch.sum(p * o_neg, 1)  #OOD 打分，即K+1类的预测值
             ood_scores.extend(hat_q[:, args.num_classes].cpu().tolist())
             pred_hat_q = hat_q.data.max(1)[1]
             pred_hat_q_list.extend(pred_hat_q.cpu().tolist())#预测的为标签
 
-            # predictions q of open-set classifier   #这是论文配图中下边的那个开放集分类头
+            # predictions q of open-set classifier   #这是论文fig2 中最下边的那个开放集分类头，对应fig4 的psi
             q = F.softmax(logits_open, 1)
             pred_q = q.data.max(1)[1]
             pred_q_list.extend(pred_q.cpu().tolist())
 
             # prediction hat_p of open-set classifier
-            hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)#归一化
+            hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)#归一化,对于经过psi的K+1分类器，对闭集logit做一个归一化
             pred_hat_p = hat_p.data.max(1)[1]
             pred_hat_p_list.extend(pred_hat_p.cpu().tolist())
 
         y_true = np.array(y_true_list)
         closed_mask = y_true < args.num_classes
         open_mask = y_true >= args.num_classes
-        y_true[open_mask] = args.num_classes
+        y_true[open_mask] = args.num_classes#将所有的ood数据标记为args.num_classes，比如6分类任务，inlier标记为1-5，ood标记为6
 
 
         pred_p = np.array(pred_p_list)
@@ -133,14 +134,14 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         pred_hat_q = np.array(pred_hat_q_list)
 
         # closed accuracy of p / hat_p on closed test data
-        c_acc_c_p = accuracy_score(y_true[closed_mask], pred_p[closed_mask])
-        c_acc_c_hp = accuracy_score(y_true[closed_mask], pred_hat_p[closed_mask])
+        c_acc_c_p = accuracy_score(y_true[closed_mask], pred_p[closed_mask])#在test set中，把inlier拿出来，测试模型对inlier分类的精确度
+        c_acc_c_hp = accuracy_score(y_true[closed_mask], pred_hat_p[closed_mask])#K+1分类的open set classifer当作闭集分类器使用，同样测试test set中先把inlier选出来后，测试其精确度
         c_cfmat_c_p = confusion_matrix(y_true[closed_mask], pred_p[closed_mask], normalize='true')
         c_cfmat_c_hp = confusion_matrix(y_true[closed_mask], pred_hat_p[closed_mask], normalize='true')
         np.set_printoptions(precision=3, suppress=True)
 
         # open accuracy of q / hat_q on full test data
-        o_acc_f_q = balanced_accuracy_score(y_true, pred_q)
+        o_acc_f_q = balanced_accuracy_score(y_true, pred_q)#psi分类头得到的，这里的y_true是真实标签不变，ood全标记为args.num_classes,即K+1类的分类任务
         o_acc_f_hq = balanced_accuracy_score(y_true, pred_hat_q)#iomatch方法得到的精确度，对于开机集样本，如果被分到闭集，则认为是分错了
         o_cfmat_f_q = confusion_matrix(y_true, pred_q, normalize='true')
         o_cfmat_f_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
@@ -150,13 +151,13 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         o_cfmat_e_hq = None
 
         # auroc
-        # auroc = roc_auc_score(y_true, y_score)#TODO: auroc
+        # auroc = roc_auc_score(y_true, y_score)#
         ood_scores = np.array(ood_scores)  # 这里为了方便，ood记为1，id记为0
         gt_id_or_ood = [0 if val in range(args.num_classes) else 1 for val in y_true_list]
         gt_id_or_ood = np.array(gt_id_or_ood)
         auroc = roc_auc_score(gt_id_or_ood, ood_scores)
 
-        #这里的
+
         if extended_test:
             unk_scores = [] # K+1类的概率
             unk_scores_q = []
@@ -240,7 +241,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/jhy_experiment/iomatch_cifar10_24_0_test.yaml'
+config='config/openset_cv/jhy_experiment/iomatch_cifar10_6000_0_hard.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
