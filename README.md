@@ -87,7 +87,7 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 After training, the best checkpoints will be saved in ``./saved_models``. The closed-set performance has been reported in the training logs. For the open-set evaluation, please see [``evaluate.ipynb``](./evaluate.ipynb).
 
 ## jhy-experiment result
-cifar10 open set
+### cifar10 open set
 easy group:6个动物类当已知类，其他类为未知类
 
 困难组  
