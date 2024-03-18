@@ -229,7 +229,9 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
 
         return eval_dict
 
-args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_2000_1.yaml'])
+#待测的实验设置
+config='config/openset_cv/jhy_experiment/iomatch_cifar10_300_0.yaml'
+args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
 dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
