@@ -61,19 +61,19 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
     """
     evaluation function for open-set SSL setting
     """
-
+    # 原始cifar10的测试集作为测试集
     full_loader = DataLoader(dataset_dict['test']['full'], batch_size=256, drop_last=False, shuffle=False, num_workers=4)
-    if extended_test:
+    if extended_test:  #原始cifar10的测试集加上其他ood数据，其他ood数据有svhn，高斯噪声、均值噪声、（还有一种忘了），每种ood数据量都是一样的
         extended_loader = DataLoader(dataset_dict['test']['extended'], batch_size=1024, drop_last=False, shuffle=False, num_workers=4)
 
     total_num = 0.0
-    y_true_list = []
+    y_true_list = []#真实标签
     p_list = []
     pred_p_list = []
     pred_hat_q_list = []
     pred_q_list = []
     pred_hat_p_list = []
-
+    ood_scores=[]
     with torch.no_grad():
         for data in tqdm(full_loader):
             x = data['x_lb']
@@ -106,9 +106,10 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
             o_neg = r[tmp_range, 0, :]
             o_pos = r[tmp_range, 1, :]
             hat_q[:, :args.num_classes] = p * o_pos
-            hat_q[:, args.num_classes] = torch.sum(p * o_neg, 1)
+            hat_q[:, args.num_classes] = torch.sum(p * o_neg, 1)  #OOD 打分，即K+1类的预测值
+            ood_scores.extend(hat_q[:, args.num_classes].cpu().tolist())
             pred_hat_q = hat_q.data.max(1)[1]
-            pred_hat_q_list.extend(pred_hat_q.cpu().tolist())
+            pred_hat_q_list.extend(pred_hat_q.cpu().tolist())#预测的为标签
 
             # predictions q of open-set classifier   #这是论文配图中下边的那个开放集分类头
             q = F.softmax(logits_open, 1)
@@ -148,10 +149,16 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         o_cfmat_e_q = None
         o_cfmat_e_hq = None
 
+        # auroc
+        # auroc = roc_auc_score(y_true, y_score)#TODO: auroc
+        ood_scores = np.array(ood_scores)  # 这里为了方便，ood记为1，id记为0
+        gt_id_or_ood = [0 if val in range(args.num_classes) else 1 for val in y_true_list]
+        gt_id_or_ood = np.array(gt_id_or_ood)
+        auroc = roc_auc_score(gt_id_or_ood, ood_scores)
 
         #这里的
         if extended_test:
-            unk_scores = []
+            unk_scores = [] # K+1类的概率
             unk_scores_q = []
             for data in tqdm(extended_loader):
                 x = data['x_lb']
@@ -184,6 +191,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
                 o_neg = r[tmp_range, 0, :]
                 o_pos = r[tmp_range, 1, :]
                 unk_score = torch.sum(p * o_neg, 1)
+                unk_scores.extend(unk_score.cpu().tolist())
                 hat_q[:, :args.num_classes] = p * o_pos
                 hat_q[:, args.num_classes] = torch.sum(p * o_neg, 1)
                 pred_hat_q = hat_q.data.max(1)[1]
@@ -212,6 +220,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
             o_cfmat_e_q = confusion_matrix(y_true, pred_q, normalize='true')
             o_cfmat_e_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
 
+
         eval_dict = {'c_acc_c_p': c_acc_c_p, 'c_acc_c_hp': c_acc_c_hp,
                      'o_acc_f_q': o_acc_f_q, 'o_acc_f_hq': o_acc_f_hq,
                      'o_acc_e_q': o_acc_e_q, 'o_acc_e_hq': o_acc_e_hq,
@@ -224,13 +233,14 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
               f" Closed Accuracy on Closed Test Data (p / hp): {c_acc_c_p * 100:.2f} / {c_acc_c_hp * 100:.2f}\n"
               f" Open Accuracy on Full Test Data (q / hq):     {o_acc_f_q * 100:.2f} / {o_acc_f_hq * 100:.2f}\n"
               f" Open Accuracy on Extended Test Data (q / hq): {o_acc_e_q * 100:.2f} / {o_acc_e_hq * 100:.2f}\n"
+              f' AUROC:{auroc*100}%\n '
               f"#############################################################\n"
             )
 
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/jhy_experiment/iomatch_cifar10_300_0.yaml'
+config='config/openset_cv/jhy_experiment/iomatch_cifar10_24_0_test.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'

@@ -44,3 +44,4 @@ multiprocessing_distributed: False
 dist_url: tcp://127.0.0.1:10008
 dist_backend: nccl
 gpu: None
+exp_group: cifar10_easy

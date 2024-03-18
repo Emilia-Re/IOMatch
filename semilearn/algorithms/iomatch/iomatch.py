@@ -129,10 +129,10 @@ class IOMatch(AlgorithmBase):
                 r = F.softmax(logits_mb, 1)
                 tmp_range = torch.arange(0, num_ulb).long().cuda(self.gpu)
                 out_scores = torch.sum(targets_p * r[tmp_range, 0, :], 1)
-                in_mask = (out_scores < 0.5)
+                in_mask = (out_scores < 0.5)#这里是用来筛选inlier
 
-                o_neg = r[tmp_range, 0, :]
-                o_pos = r[tmp_range, 1, :]
+                o_neg = r[tmp_range, 0, :]#论文中的o bar
+                o_pos = r[tmp_range, 1, :]#论文中的o
                 q = torch.zeros((num_ulb, self.num_classes + 1)).cuda(self.gpu)
                 q[:, :self.num_classes] = targets_p * o_pos
                 q[:, self.num_classes] = torch.sum(targets_p * o_neg, 1)
