@@ -86,6 +86,24 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 
 After training, the best checkpoints will be saved in ``./saved_models``. The closed-set performance has been reported in the training logs. For the open-set evaluation, please see [``evaluate.ipynb``](./evaluate.ipynb).
 
+## jhy-experiment result
+cifar10 open set
+easy group:6个动物类当已知类，其他类为未知类
+
+困难组  
+已知类：飞机、鹿、猫、汽车、青蛙、船<br>
+        未知类：  鸟、马、狗、卡车
+	    不同组中每个类的标记样本分别设置为50，200，1000，原始cifar10测试集作为测试集
+
+
+| 表头1           | easy | hard |
+|---------------|-------|-------|
+| cifar-10-300  | 0.939666666666666 | 0.9755 |
+| cifar10_1200  | 0.943333333333333 | 0.975333333333333 |
+ | cifar10_6000  |0.951|0.979|
+
+
+
 ## Example Results
 
 ### Close-Set Classification Accuracy
