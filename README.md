@@ -110,7 +110,7 @@ easy group:6个动物类当已知类，其他类为未知类
 
 **Open Accuracy on Full Test Data**:指的是在原始cifar10的test set中，将ood数据当作K+1类，在整个原始cifar10 test set上进行K+1分类任务的精确度
 
-**cifar10-300-0-easy**:中的“-0-”是指随机种子
+**cifar10-300-0-easy**:中的“-0-”是指随机种子,300指标记数据一共有300个
 
 |        group        | Closed Accuracy on Closed Test Data  |  Open Accuracy on Full Test Data  |         AUROC         |
 |:-------------------:|:------------------------------------:|:---------------------------------:|:---------------------:|
