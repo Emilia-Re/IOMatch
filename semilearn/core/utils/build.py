@@ -74,8 +74,13 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
 
     test_dset = None
     if dataset in ["cifar10_openset", "cifar100_openset"]:
+        #这里判断是否做普通半监督学习，即是否将未标记数据设置全是inlier
+        if args.exp_group=='cifar100_pure':
+            pure_unlabeled=True  #未标记数据设置全是inlier
+        else:
+            pure_unlabeled = False
         lb_dset, ulb_dset, eval_dset, eval_full_dset = get_cifar_openset(args, algorithm, dataset, num_labels,
-                                                                         num_classes, data_dir=data_dir)
+                                                                         num_classes, data_dir=data_dir,pure_unlabeled=pure_unlabeled)
         if eval_open:
             test_dset = {'full': eval_full_dset}
     elif dataset == 'imagenet30':

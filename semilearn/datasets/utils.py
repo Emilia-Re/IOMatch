@@ -46,6 +46,7 @@ def sample_labeled_data(args, data, target, num_labels, num_classes, index=None)
     '''
     samples for labeled data
     (sampling with balanced ratio over classes)
+    这里选出的标记数据会以.npy文件存在data目录中，如果跑不同组实验，记得跑实验前把.npy文件删掉
     '''
     assert num_labels % num_classes == 0
     if index is not None:

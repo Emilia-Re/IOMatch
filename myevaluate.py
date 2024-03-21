@@ -48,7 +48,9 @@ def load_model_at(step='best'):
     os.makedirs(args.save_dir, exist_ok=True)
     _net_builder = get_net_builder(args.net, args.net_from_name)
     net = _net_builder(num_classes=args.num_classes)
-    net = IOMatchNet(net, args.num_classes)
+    # if args.cifar100_pure:
+    #     net=
+    net = IOMatchNet(net, args.num_classes) #TODO：尝试改成FixMatchnet
     keys = net.load_state_dict(load_state_dict)
     print(f'Model at step {args.step} loaded!')
     if torch.cuda.is_available():
@@ -241,7 +243,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=False):
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/jhy_experiment/iomatch_cifar10_6000_0_hard.yaml'
+config='config/openset_cv/jhy_experiment/fixmatch_cifar100_2500_pure_0.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
