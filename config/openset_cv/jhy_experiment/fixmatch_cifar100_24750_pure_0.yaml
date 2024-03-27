@@ -1,19 +1,19 @@
-#探索半监督开放集方法的上限,做一个80分类的任务，取前16个超类，每类495个标记数据，未标记数据中不含ood
+#探索半监督开放集方法的上限,做一个50分类的任务，取前10个超类，每类495个标记数据，未标记数据中不含ood
 algorithm: fixmatch
 save_dir: ./saved_models/openset_cv
-save_name: fixmatch_cifar100_39600_0
+save_name: fixmatch_cifar100_24750_0
 resume: False
-load_path: ./saved_models/openset_cv/fixmatch_cifar100_39600_0/latest_model.pth
+load_path: ./saved_models/openset_cv/fixmatch_cifar100_24750_0/latest_model.pth
 overwrite: True
 use_tensorboard: True
-#epoch: 1
-#num_train_iter: 1
-#num_eval_iter: 1
+#epoch: 10
+#num_train_iter: 100
+#num_eval_iter: 10
 epoch: 256
 num_train_iter: 262144
 num_eval_iter: 1024
 
-num_labels: 39600
+num_labels: 24750
 
 batch_size: 64
 eval_batch_size: 256
@@ -38,7 +38,9 @@ net_from_name: False
 data_dir: ./data
 dataset: cifar100_openset
 train_sampler: RandomSampler
-num_classes: 80
+
+num_classes: 50
+
 num_workers: 1
 seed: 0
 world_size: 1
