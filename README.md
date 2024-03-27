@@ -86,8 +86,8 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 
 After training, the best checkpoints will be saved in ``./saved_models``. The closed-set performance has been reported in the training logs. For the open-set evaluation, please see [``evaluate.ipynb``](./evaluate.ipynb).
 
-## jhy-experiment result
-### cifar10 open set
+# jhy-experiment result
+## cifar10 open set
 easy group:6个动物类当已知类，其他类为未知类
 
 困难组  
@@ -120,6 +120,25 @@ easy group:6个动物类当已知类，其他类为未知类
 | cifar10-1200-0-hard |                97.53                 |               83.43               |  51.282487499999995%  |
 | cifar10-6000-0-easy |                95.10                 |               81.50               |  55.774950000000004%  |
 | cifar10-6000-0-hard |                97.90                 |               83.91               |  54.14243333333333%   |
+
+## cifar10 pure
+
+cifar10数据集上的半监督学习，未标记数据中不含有噪声数据,相当于开放集半监督学习的上界
+
+通过之前的实验可知，cifar10上的6分类任务，区分6个动物类属于相对较困难任务
+
+| group         | acc |
+|---------------|-----|
+| cifar10-24-0  | -   |
+| cifar10-150-0 | -   |
+| cifar10-300-0 | -   |
+
+## cifar10 fully-supervised
+cifar10数据集上的全监督学习，利用99%的原始cifar10数据作为标记数据，其他数据作为未标记数据，作为半监督学习的上界
+
+|group|acc|
+|---|---|
+|cifar10-49500|-|
 
 ## cifar100数据集上开放集半监督方法上界
 每个类别使用50个标记数据
