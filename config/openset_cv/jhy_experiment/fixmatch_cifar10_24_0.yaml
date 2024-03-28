@@ -47,4 +47,4 @@ dist_backend: nccl
 gpu: None
 
 exp_group: cifar10_easy
-pure: True
+pure_unlabeled: True

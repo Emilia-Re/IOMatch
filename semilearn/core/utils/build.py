@@ -75,7 +75,7 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
     test_dset = None
     if dataset in ["cifar10_openset", "cifar100_openset"]:
         #这里判断是否做普通半监督学习，即是否将未标记数据设置全是inlier
-        if args.exp_group=='cifar100_pure':
+        if args.pure_unlabeled==True:
             pure_unlabeled=True  #未标记数据设置全是inlier
         else:
             pure_unlabeled = False

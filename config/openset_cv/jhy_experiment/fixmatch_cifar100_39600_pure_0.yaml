@@ -50,3 +50,4 @@ dist_url: tcp://127.0.0.1:10005
 dist_backend: nccl
 gpu: None
 exp_group: cifar100_pure
+

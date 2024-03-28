@@ -88,7 +88,8 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
 
     lb_dset = BasicDataset(alg, lb_data, lb_targets, num_classes, transform_weak, False, None, False)
 
-    if pure_unlabeled:
+
+    if pure_unlabeled:#在这里设置未标记数据中是否含有噪声数据
         seen_indices = np.where(ulb_targets < num_classes)[0]
         ulb_data = ulb_data[seen_indices]
         ulb_targets = ulb_targets[seen_indices]
