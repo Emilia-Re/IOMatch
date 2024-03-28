@@ -55,7 +55,11 @@ def sample_labeled_data(args, data, target, num_labels, num_classes, index=None)
 
     dump_dir = os.path.join(base_dir, 'data', args.dataset, 'labeled_idx')
     os.makedirs(dump_dir, exist_ok=True)
-    dump_path = os.path.join(dump_dir, f'labels{args.num_labels}_seed{args.seed}_idx.npy')
+    if args.pure_unlabeled==True:
+        pure_unlabeled="pure_unlabeled"
+    else :
+        pure_unlabeled='noisy_unlabeled'
+    dump_path = os.path.join(dump_dir, f'labels{args.num_labels}_seed{args.seed}_{pure_unlabeled}_idx.npy')
 
     if os.path.exists(dump_path):
         lb_idx = np.load(dump_path)
