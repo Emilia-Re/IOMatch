@@ -1,22 +1,22 @@
 algorithm: fixmatch
 save_dir: ./saved_models/openset_cv
-save_name: fixmatch_in30_p1_1
+save_name: fixmatch_in30_p99_1
 resume: False
-load_path: ./saved_models/openset_cv/fixmatch_in30_p1_1/latest_model.pth
+load_path: ./saved_models/openset_cv/fixmatch_in30_p99_1/latest_model.pth
 overwrite: True
 use_tensorboard: True
-epoch: 1
-num_train_iter: 1
-num_eval_iter: 1
-#epoch: 100
-#num_train_iter: 102400
-#num_eval_iter: 1024
-num_labels: 260
-labeled_percent: p1
-batch_size: 4
-#batch_size: 32
-eval_batch_size: 4
-#eval_batch_size: 128
+#epoch: 1
+#num_train_iter: 1
+#num_eval_iter: 1
+epoch: 100
+num_train_iter: 102400
+num_eval_iter: 1024
+num_labels: 260  #这个参数有疑问，在不同实验中应该是不同的，但是作者给出的确实相同的,我认为应该是25740
+labeled_percent: p99
+#batch_size: 1
+batch_size: 32
+#eval_batch_size: 1
+eval_batch_size: 128
 hard_label: True
 T: 0.5
 p_cutoff: 0.95
@@ -49,3 +49,5 @@ multiprocessing_distributed: False
 dist_url: tcp://127.0.0.1:10055
 dist_backend: nccl
 gpu: None
+
+pure_unlabeled: True

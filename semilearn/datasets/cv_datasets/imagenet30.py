@@ -67,6 +67,11 @@ def get_imagenet30(args, alg, name, labeled_percent, num_classes, data_dir='./da
                           alg=alg,
                           flist=os.path.join(data_dir, f'filelist/train_labeled_{labeled_percent}.txt'))
 
+
+
+
+
+
     ulb_dset = IN30Dataset(root=os.path.join(data_dir, "one_class_train"),
                            transform=transform_weak,
                            is_ulb=True,
@@ -80,12 +85,23 @@ def get_imagenet30(args, alg, name, labeled_percent, num_classes, data_dir='./da
                             alg=alg,
                             flist=os.path.join(data_dir, f'filelist/test.txt'))
 
+
+
+
     test_data, test_targets = test_dset.data, test_dset.targets
     test_targets[test_targets >= num_classes] = num_classes
     seen_indices = np.where(test_targets < num_classes)[0]
-
     eval_dset = copy.deepcopy(test_dset)
     eval_dset.data, eval_dset.targets = eval_dset.data[seen_indices], eval_dset.targets[seen_indices]
+
+    #在这里设置纯净的无标记数据集
+    if hasattr(args,"pure_unlabeled") and args.pure_unlabeled==True:
+        ulb_data,ulb_targets=ulb_dset.data,ulb_dset.targets
+        ulb_targets[ulb_targets>=num_classes]=num_classes
+        seen_indices=np.where(ulb_targets < num_classes)[0]
+        pure_ulb_dset=copy.deepcopy(ulb_dset)
+        pure_ulb_dset.data,pure_ulb_dset.targets=pure_ulb_dset.data[seen_indices],pure_ulb_dset.targets[seen_indices]
+        return lb_dset, pure_ulb_dset, eval_dset, test_dset
 
     return lb_dset, ulb_dset, eval_dset, test_dset
 
