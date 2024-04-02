@@ -190,9 +190,9 @@ ImageNet30中20个类作为已知类，其他类作为未知类，backbone不同
 ### ImageNet30全监督学习
 使用99%的数据作为标记数据
 
-|group|acc|
-|---|---|
-|in-99%|--|
+|group| acc   |
+|---|-------|
+|in-99%| 94.85 |
 
 ## Example Results
 
