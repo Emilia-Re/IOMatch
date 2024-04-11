@@ -243,7 +243,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=False):
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/jhy_experiment/iomatch_cifar100_2500_0.yaml'
+config='config/openset_cv/jhy_experiment/iomatch_cifar100_4000_0.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
