@@ -102,10 +102,10 @@ After training, the best checkpoints will be saved in ``./saved_models``. The cl
 测试时：cifar10上6个已知类
 
 
-| group                         | acc               |
-|-------------------------------|-------------------|
+| group                         | acc             |
+|-------------------------------|-----------------|
 | cifar10-6-150-noisy-unlabeled | 93.51666666666667 |
-| cifar10-6-300-noisy-unlabeled | 93.5,             |
+| cifar10-6-300-noisy-unlabeled | 93.5           |
 
 
 ## cifar10开放集半监督学习
