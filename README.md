@@ -96,6 +96,18 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 After training, the best checkpoints will be saved in ``./saved_models``. The closed-set performance has been reported in the training logs. For the open-set evaluation, please see [``evaluate.ipynb``](./evaluate.ipynb).
 
 # jhy-experiment result
+
+## cifar10噪声数据上进行半监督学习
+训练时：cifar10上6个已知类，四个未知类
+测试时：cifar10上6个已知类
+
+
+| group                         | acc               |
+|-------------------------------|-------------------|
+| cifar10-6-150-noisy-unlabeled | 93.51666666666667 |
+| cifar10-6-300-noisy-unlabeled | 93.5,             |
+
+
 ## cifar10开放集半监督学习
 easy group:6个动物类当已知类，其他类为未知类
 
