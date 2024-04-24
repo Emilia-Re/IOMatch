@@ -1,8 +1,8 @@
 algorithm: fixmatch
 save_dir: ./saved_models/openset_cv
-save_name: fixmatch_cifar10_150_0_noisy_unlabeled
-resume: True
-load_path: ./saved_models/openset_cv/fixmatch_cifar10_150_0_noisy_unlabeled/latest_model.pth
+save_name: fixmatch_cifar10_300_0_noisy_unlabeled_test
+resume: False
+load_path: ./saved_models/openset_cv/fixmatch_cifar10_300_0_noisy_unlabeled_test/latest_model.pth
 overwrite: True
 use_tensorboard: True
 #epoch: 1
@@ -11,7 +11,9 @@ use_tensorboard: True
 epoch: 256
 num_train_iter: 262144
 num_eval_iter: 1024
-num_labels: 150
+
+num_labels: 300
+
 batch_size: 64
 eval_batch_size: 256
 hard_label: True
@@ -40,7 +42,7 @@ num_workers: 1
 seed: 0
 world_size: 1
 rank: 0
-multiprocessing_distributed: True
+multiprocessing_distributed: False
 dist_url: tcp://127.0.0.1:10008
 dist_backend: nccl
 gpu: None
