@@ -98,7 +98,7 @@ After training, the best checkpoints will be saved in ``./saved_models``. The cl
 # jhy-experiment result
 
 ## cifar10噪声数据上进行半监督学习
-训练时：cifar10上6个已知类，四个未知类
+训练时：cifar10上6个已知类，四个未知类，无标记数据为cifar10原始的全部数据
 测试时：cifar10上6个已知类
 
 
@@ -106,6 +106,14 @@ After training, the best checkpoints will be saved in ``./saved_models``. The cl
 |-------------------------------|-----------------|
 | cifar10-6-150-noisy-unlabeled | 93.51666666666667 |
 | cifar10-6-300-noisy-unlabeled | 93.5           |
+
+
+## cifar10上未标记数据全是噪声数据
+
+
+| group                               | acc               |
+|-------------------------------------|-------------------|
+| cifar10-6-300--pure-noisy-unlabeled | 63.48333333333334 |
 
 
 ## cifar10开放集半监督学习

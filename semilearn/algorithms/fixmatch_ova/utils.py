@@ -11,7 +11,7 @@ def ova_loss_func(logits_open, label):
     label_range = torch.arange(0, logits_open.size(0)).long()
     label_s_sp[label_range, label] = 1  # one-hot labels, in the shape of (bsz, num_classes)
     label_sp_neg = 1 - label_s_sp
-    open_loss = torch.mean(torch.sum(-torch.log(logits_open[:, 1, :] + 1e-8) * label_s_sp, 1))
+    open_loss = torch.mean(torch.sum(-torch.log(logits_open[:, 1, :] + 1e-8) * label_s_sp, 1))  #这里计算-log(x) ，即标记数据的ova损失
     open_loss_neg = torch.mean(torch.max(-torch.log(logits_open[:, 0, :] + 1e-8) * label_sp_neg, 1)[0])
     l_ova = open_loss_neg + open_loss
     return l_ova

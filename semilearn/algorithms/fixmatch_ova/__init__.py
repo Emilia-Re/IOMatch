@@ -1,1 +1,1 @@
-from .openmatch import OpenMatch
+from .fixmatch_ova import FixMatch_OVA

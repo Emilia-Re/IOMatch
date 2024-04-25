@@ -1,12 +1,13 @@
 from .fixmatch import FixMatch
 from .openmatch import OpenMatch
 from .iomatch import IOMatch
-
+from .fixmatch_ova import FixMatch_OVA
 # if any new alg., please append the dict
 name2alg = {
     "fixmatch": FixMatch,
     'openmatch': OpenMatch,
-    "iomatch": IOMatch
+    "iomatch": IOMatch,
+    "fixmatch_ova": FixMatch_OVA
 }
 
 

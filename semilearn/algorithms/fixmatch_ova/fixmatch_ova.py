@@ -15,6 +15,7 @@ from semilearn.algorithms.hooks import PseudoLabelingHook, FixedThresholdingHook
 from semilearn.algorithms.utils import ce_loss, consistency_loss, SSL_Argument, str2bool
 
 from .utils import ova_loss_func, em_loss_func, socr_loss_func
+from sklearn.metrics import roc_auc_score
 
 
 def pil_loader(path):
@@ -23,11 +24,11 @@ def pil_loader(path):
         return img.convert('RGB')
 
 
-class OpenMatchDataset(BasicDataset):
+class FixMatch_OVA_Dataset(BasicDataset):
     def __init__(self, dset, name):
         self.data = copy.deepcopy(dset.data)
         self.targets = copy.deepcopy(dset.targets)
-        super(OpenMatchDataset, self).__init__(alg='openmatch',
+        super(FixMatch_OVA_Dataset, self).__init__(alg='fixmatch_voa',
                                                data=self.data,
                                                targets=self.targets,
                                                num_classes=dset.num_classes,
@@ -40,8 +41,8 @@ class OpenMatchDataset(BasicDataset):
 
     def set_index(self, indices=None):
         if indices is not None:
-            self.data_index = self.data[indices]
-            self.targets_index = self.targets[indices]
+            self.data_index = self.data[indices.to('cpu')]
+            self.targets_index = self.targets[indices.to('cpu')]
         else:
             self.data_index = self.data
             self.targets_index = self.targets
@@ -77,9 +78,9 @@ class OpenMatchDataset(BasicDataset):
             return {'x_ulb_w': img_w, 'x_ulb_s': self.strong_transform(img)}
 
 
-class OpenMatchNet(nn.Module):
+class FixMatch_OVA_NET(nn.Module):
     def __init__(self, base, num_classes):
-        super(OpenMatchNet, self).__init__()
+        super(FixMatch_OVA_NET, self).__init__()
         self.backbone = base
         self.feat_planes = base.num_features
 
@@ -96,7 +97,7 @@ class OpenMatchNet(nn.Module):
         return matcher
 
 
-class OpenMatch(AlgorithmBase):
+class FixMatch_OVA(AlgorithmBase):
     """
         OpenMatch algorithm (https://arxiv.org/abs/2105.14148).
     """
@@ -105,16 +106,16 @@ class OpenMatch(AlgorithmBase):
         super().__init__(args, net_builder, tb_log, logger)
         # openmatch specified arguments
         self.p_cutoff = args.p_cutoff
-        self.lambda_em = args.lambda_em
-        self.lambda_socr = args.lambda_socr
+        self.lambda_em = args.lambda_em #特有的
+        self.lambda_socr = args.lambda_socr#特有
         self.start_fix = args.start_fix
         self.fix_uratio = args.fix_uratio
 
     def set_dataset(self):
-        dataset_dict = super(OpenMatch, self).set_dataset()
-        dataset_dict['train_lb'] = OpenMatchDataset(dset=dataset_dict['train_lb'], name='train_lb')
-        dataset_dict['train_ulb'] = OpenMatchDataset(dset=dataset_dict['train_ulb'], name='train_ulb')
-        dataset_dict['train_ulb_selected'] = OpenMatchDataset(dset=dataset_dict['train_ulb'], name='train_ulb_selected')
+        dataset_dict = super(FixMatch_OVA, self).set_dataset()
+        dataset_dict['train_lb'] = FixMatch_OVA_Dataset(dset=dataset_dict['train_lb'], name='train_lb')
+        dataset_dict['train_ulb'] = FixMatch_OVA_Dataset(dset=dataset_dict['train_ulb'], name='train_ulb')
+        dataset_dict['train_ulb_selected'] = FixMatch_OVA_Dataset(dset=dataset_dict['train_ulb'], name='train_ulb_selected')
         return dataset_dict
 
     def set_hooks(self):
@@ -124,12 +125,12 @@ class OpenMatch(AlgorithmBase):
 
     def set_model(self):
         model = super().set_model()  # backbone
-        model = OpenMatchNet(model, num_classes=self.num_classes)  # including ova classifiers
+        model = FixMatch_OVA_NET(model, num_classes=self.num_classes)  # including ova classifiers
         return model
 
     def set_ema_model(self):
         ema_model = self.net_builder(num_classes=self.num_classes)
-        ema_model = OpenMatchNet(ema_model, num_classes=self.num_classes)
+        ema_model = FixMatch_OVA_NET(ema_model, num_classes=self.num_classes)
         ema_model.load_state_dict(self.model.state_dict())
         return ema_model
 
@@ -195,8 +196,9 @@ class OpenMatch(AlgorithmBase):
 
             sup_loss = ce_loss(logits_x_lb, y_lb.repeat(2), reduction='mean')
             ova_loss = ova_loss_func(logits_open_lb, y_lb.repeat(2))
-            em_loss = em_loss_func(logits_open_ulb_0, logits_open_ulb_1)
-            socr_loss = socr_loss_func(logits_open_ulb_0, logits_open_ulb_1)
+            em_loss = em_loss_func(logits_open_ulb_0, logits_open_ulb_1) #这个在fixmatch中没有
+            socr_loss = socr_loss_func(logits_open_ulb_0, logits_open_ulb_1)#这个在fixmatch中也没有
+
 
             fix_loss = torch.tensor(0).cuda(self.gpu)
             if self.epoch >= self.start_fix:
@@ -219,7 +221,8 @@ class OpenMatch(AlgorithmBase):
                                             'ce',
                                             mask=mask)
 
-            total_loss = sup_loss + ova_loss + self.lambda_em * em_loss + self.lambda_socr * socr_loss + fix_loss
+            # total_loss = sup_loss + ova_loss + self.lambda_em * em_loss + self.lambda_socr * socr_loss + fix_loss
+            total_loss = sup_loss + ova_loss   + fix_loss
 
         self.call_hook("param_update", "ParamUpdateHook", loss=total_loss)
 
@@ -243,6 +246,7 @@ class OpenMatch(AlgorithmBase):
         self.model.eval()
         self.ema.apply_shadow()
         self.print_fn(f"Selecting...")
+        all_unk_score=[]
         with torch.no_grad():
             for batch_idx, data in enumerate(loader):
                 x = data['x_ulb_w_0']
@@ -255,12 +259,13 @@ class OpenMatch(AlgorithmBase):
                 y = y.cuda(self.gpu)
 
                 outputs = self.model(x)
-                logits, logits_open = outputs['logits'], outputs['logits_open']
+                logits, logits_open = outputs['logits'], outputs['logits_open']   #ova预测第0个是ood概率，第二个是id概率
                 logits = F.softmax(logits, 1)
                 logits_open = F.softmax(logits_open.view(logits_open.size(0), 2, -1), 1)
                 tmp_range = torch.arange(0, logits_open.size(0)).long().cuda(self.gpu)
                 pred_close = logits.data.max(1)[1]
                 unk_score = logits_open[tmp_range, 0, pred_close]
+                all_unk_score.extend(unk_score.cpu().tolist())
                 select_idx = unk_score < 0.5
                 gt_idx = y < self.args.num_classes
                 if batch_idx == 0:
@@ -274,10 +279,14 @@ class OpenMatch(AlgorithmBase):
         select_precision = precision_score(gt_all.cpu().numpy(), select_all.cpu().numpy())
         select_recall = recall_score(gt_all.cpu().numpy(), select_all.cpu().numpy())
 
-        selected_idx = torch.arange(0, len(select_all))[select_all]
+        select_auroc = roc_auc_score(torch.logical_not(gt_all).to(torch.float32).cpu().numpy(),np.array(all_unk_score))
+
+
+        selected_idx = torch.arange(0, len(select_all)).to(select_all.device)[select_all]
         if self.rank == 0:
             self.print_fn(f"Selected ratio = {len(selected_idx) / len(select_all)}, accuracy = {select_accuracy}, "
                           f"precision = {select_precision}, recall = {select_recall}")
+            self.print_fn(f"AUROC:{select_auroc}")
 
         self.ema.restore()
         self.model.train()

@@ -94,6 +94,12 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
         ulb_data = ulb_data[seen_indices]
         ulb_targets = ulb_targets[seen_indices]
 
+       #设置未标记数据全是噪声数据
+    if hasattr(args,'unlabeled_pure_ood') and args.unlabeled_pure_ood==True :
+        unseen_indices = np.where(ulb_targets >= num_classes)[0]
+        ulb_data = ulb_data[unseen_indices]
+        ulb_targets = ulb_targets[unseen_indices]
+
     ulb_dset = BasicDataset(alg, ulb_data, ulb_targets, num_all_classes, transform_weak, True, transform_strong, False)
 
     dset = getattr(torchvision.datasets, name.upper())
