@@ -9,6 +9,15 @@ This is the official repository for our **ICCV 2023** paper:
 
 [[`Paper`](https://arxiv.org/abs/2308.13168)] [[`Poster`]](./pubs/Poster.pdf) [[`Slides`]](./pubs/Slides.pdf) [[`Models and Logs`](https://drive.google.com/drive/folders/1pLU6tqxMls55CBRvCgZmDBfHLXm7jGMv?usp=sharing)] [[`BibTeX`](#citation)]
 
+
+
+## RUN
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2 python train.py --c 
+```
+
+
 ## Preparation
 
 ### Required Packages
@@ -96,6 +105,15 @@ CUDA_VISIBLE_DEVICES=0 python train.py --c config/openset_cv/iomatch/iomatch_cif
 After training, the best checkpoints will be saved in ``./saved_models``. The closed-set performance has been reported in the training logs. For the open-set evaluation, please see [``evaluate.ipynb``](./evaluate.ipynb).
 
 # jhy-experiment result
+
+# fixmatch加上ova分类头
+
+| group                      | acc    |auroc|
+|----------------------------|--------|----|
+| fixmatch_ova_cifar10_150_0 | 0.866  |0.7016606183333334|
+| fixmatch_ova_cifar10_300_0 |0.9241666666666667|0.7867588816666666|
+ | fixmatch_ova_cifar10_600_0 |0.9343333333333333|0.7628416333333334|
+
 
 ## cifar10噪声数据上进行半监督学习
 训练时：cifar10上6个已知类，四个未知类，无标记数据为cifar10原始的全部数据

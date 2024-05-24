@@ -274,7 +274,7 @@ class OpenMatch(AlgorithmBase):
         select_precision = precision_score(gt_all.cpu().numpy(), select_all.cpu().numpy())
         select_recall = recall_score(gt_all.cpu().numpy(), select_all.cpu().numpy())
 
-        selected_idx = torch.arange(0, len(select_all))[select_all]
+        selected_idx = torch.arange(0, len(select_all)).to(select_all.device)[select_all]
         if self.rank == 0:
             self.print_fn(f"Selected ratio = {len(selected_idx) / len(select_all)}, accuracy = {select_accuracy}, "
                           f"precision = {select_precision}, recall = {select_recall}")
