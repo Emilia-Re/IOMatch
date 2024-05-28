@@ -106,6 +106,15 @@ After training, the best checkpoints will be saved in ``./saved_models``. The cl
 
 # jhy-experiment result
 
+cifar10上openmatch实验，其中每组中后边的数字代表标记数据总数
+
+| group       |acc|
+|-------------|---|
+| cifar10-150 |0.6688333333333333|
+| cifar10-300 |0.8765|
+| cifar10-600 |0.6031666666666666|
+|cifar10-2400|0.9473333333333334|
+
 # fixmatch加上ova分类头
 
 | group                      | acc    |auroc|

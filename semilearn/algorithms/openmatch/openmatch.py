@@ -283,7 +283,7 @@ class OpenMatch(AlgorithmBase):
         self.model.train()
         if self.epoch >= self.start_fix:
             if len(selected_idx) > 0:
-                self.dataset_dict['train_ulb_selected'].set_index(selected_idx)
+                self.dataset_dict['train_ulb_selected'].set_index(selected_idx.to('cpu'))
 
     @staticmethod
     def get_argument():
