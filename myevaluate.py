@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
 from semilearn.algorithms import FixMatch
+from tsne_utils.utils import tsne
 
 sys.path.append('..')
 from semilearn.core.utils import get_net_builder, get_dataset, over_write_args_from_file
@@ -285,11 +286,33 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
             pred_p_list.extend(pred_p.cpu().tolist())
 
 
+        # Run Y = tsne.tsne(X, no_dims, perplexity) to perform t-SNE on your dataset.
+        # X, labels = load_digits(return_X_y=True)
+        # Y = tsne(X, 2, 50, 20.0)
+        # from matplotlib import pyplot as plt
+        #
+        # plt.scatter(Y[:, 0], Y[:, 1], 20, labels)
+        # plt.show()
+
+
+
         y_true = np.array(y_true_list)
         closed_mask = y_true < args.num_classes
         open_mask = y_true >= args.num_classes
         y_true[open_mask] = args.num_classes#将所有的ood数据标记为args.num_classes，比如6分类任务，inlier标记为1-5，ood标记为6
 
+        # 建立t_sne图
+
+        # feat_list=np.array(feat_list)[closed_mask]
+        # X = [torch.tensor(i) for i in feat_list]  # 把每个batch中的feature转为tensor
+        # X=feat_list
+        X = torch.cat(feat_list, dim=0)  # 每个feature写成一行，结果是  数目*feature
+        labels = y_true_list[closed_mask]
+        Y_low_dim = tsne(X, 2, 128, 20.0)
+        from matplotlib import pyplot as plt
+
+        plt.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], 20, labels)
+        plt.show()
 
         pred_p = np.array(pred_p_list)  #预测标签列表
 
@@ -297,6 +320,8 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
         close_acc = accuracy_score(y_true[closed_mask], pred_p[closed_mask])#在test set中，把inlier拿出来，测试模型对inlier分类的精确度
         closed_confusion_matrix = confusion_matrix(y_true[closed_mask], pred_p[closed_mask], normalize='true')
         np.set_printoptions(precision=3, suppress=True)
+
+
 
 
         o_acc_e_q = o_acc_e_hq = 0
@@ -374,20 +399,20 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
             o_cfmat_e_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
 
 
-        eval_dict = {
+        eval_dict = {'closed_confusion_matrix':closed_confusion_matrix,
                      'o_acc_e_q': o_acc_e_q, 'o_acc_e_hq': o_acc_e_hq,
                      'o_cfmat_e_q': o_cfmat_e_q, 'o_cfmat_e_hq': o_cfmat_e_hq,
                     }
-
-        print(f"#############################################################\n"
-              f" Open Accuracy on Extended Test Data (q / hq): {o_acc_e_q * 100:.2f} / {o_acc_e_hq * 100:.2f}\n"
-              f"#############################################################\n"
-            )
+        print(f"Closed set accuracy:{close_acc}")
+        # print(f"#############################################################\n"
+        #       f" Open Accuracy on Extended Test Data (q / hq): {o_acc_e_q * 100:.2f} / {o_acc_e_hq * 100:.2f}\n"
+        #       f"#############################################################\n"
+        #     )
 
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/fixmatch/fixmatch_cifar10_600_0.yaml'
+config='config/openset_cv/jhy_experiment/fixmatch_cifar10_300_0_noisy_unlabeled.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
@@ -403,7 +428,7 @@ eval_dict = evaluate_fixmatch(args, best_net, dataset_dict)
 # Confusion matrix of closed-set classification
 fig = plt.figure()
 f, ax = plt.subplots(figsize=(12,10))
-cf_mat = eval_dict['c_cfmat_c_p']
+cf_mat = eval_dict['closed_confusion_matrix']
 ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
 plt.show()
 
