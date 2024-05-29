@@ -52,7 +52,7 @@ def get_cifar_openset(args, alg, name, num_labels, num_classes, data_dir='./data
     ])
 
     if name == 'cifar10':
-        if args.exp_group=='cifar10_hard':
+        if hasattr(args,"exp_group") and args.exp_group=='cifar10_hard':
             assert args.exp_group=='cifar10_hard'
             #困难组      已知类：飞机、鹿、猫、汽车、青蛙、船
 	                    #未知类： 鸟、马、狗、卡车

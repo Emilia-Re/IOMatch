@@ -13,6 +13,8 @@ import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
+from semilearn.algorithms import FixMatch
+
 sys.path.append('..')
 from semilearn.core.utils import get_net_builder, get_dataset, over_write_args_from_file
 from semilearn.algorithms.iomatch.iomatch import IOMatchNet
@@ -23,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--c', type=str, default='')
 
 
-def load_model_at(step='best'):
+def load_model_at(step='best',model_name=None):
     args.step = step
     if step == 'best':
         args.load_path = '/'.join(args.load_path.split('/')[1:-1]) + "/model_best.pth"
@@ -48,9 +50,7 @@ def load_model_at(step='best'):
     os.makedirs(args.save_dir, exist_ok=True)
     _net_builder = get_net_builder(args.net, args.net_from_name)
     net = _net_builder(num_classes=args.num_classes)
-    # if args.cifar100_pure:
-    #     net=
-    net = IOMatchNet(net, args.num_classes) #TODO：尝试改成FixMatchnet
+    # net = IOMatchNet(net, args.num_classes) #TODO：尝试改成FixMatchnet
     keys = net.load_state_dict(load_state_dict)
     print(f'Model at step {args.step} loaded!')
     if torch.cuda.is_available():
@@ -243,7 +243,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=False):
         return eval_dict
 
 #待测的实验设置
-config='config/openset_cv/jhy_experiment/iomatch_cifar100_4000_0.yaml'
+config='config/openset_cv/fixmatch/fixmatch_cifar10_600_0.yaml'
 args = parser.parse_args(args=['--c', config])
 over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
@@ -253,13 +253,7 @@ eval_dict = evaluate_io(args, best_net, dataset_dict)
 #默认设置     cifar100_2000   seen/unseen split of 80/20, 25 labels per seen class
 
 
-#下边这个暂时用不到
-# args = parser.parse_args(args=['--c', 'config/openset_cv/iomatch/iomatch_cifar100_1250_1.yaml'])
-# over_write_args_from_file(args, args.c)
-# args.data_dir = 'data'
-# dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
-# best_net = load_model_at('best')
-# eval_dict = evaluate_io(args, best_net, dataset_dict)
+
 
 
 # Confusion matrix of closed-set classification
