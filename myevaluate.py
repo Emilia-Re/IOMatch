@@ -1,5 +1,7 @@
 import os
 import sys
+
+from sklearn.manifold import TSNE
 from tqdm import tqdm
 import pprint
 import numpy as np
@@ -307,11 +309,45 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
         # X = [torch.tensor(i) for i in feat_list]  # 把每个batch中的feature转为tensor
         # X=feat_list
         X = torch.cat(feat_list, dim=0)  # 每个feature写成一行，结果是  数目*feature
-        labels = y_true_list[closed_mask]
-        Y_low_dim = tsne(X, 2, 128, 20.0)
-        from matplotlib import pyplot as plt
+        X=np.array(X.cpu())[closed_mask] #闭集数据
+        labels = y_true[closed_mask]#闭集标签
+        labels_to_class={0:'bird',1:'cat',2:'deer',3:'dog',4:'frog',5:'horse',6:"airplane",7:'automobile',8:'ship',9:'truck'}
+        # Y_low_dim = tsne(X, 2, 128, 20.0,max_iter=2000)
+        # Y_low_dim= TSNE(X,n_components=2, perplexity=30, n_iter=30)
+        tsne = TSNE(n_components=2, perplexity=30, n_iter=300)
+        Y_low_dim = tsne.fit_transform(X)
 
-        plt.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], 20, labels)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        unique_categories = list(set(labels_to_class.items()))
+
+        category_to_number = {category:i  for i, category in labels_to_class.items()}
+        categories=[labels_to_class[i] for i in labels ]
+        colors = [category_to_number[category] for category in categories]
+        colormap = plt.cm.get_cmap('Set2', len(unique_categories))
+
+        scatter = ax.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], c=colors,s=2,cmap=colormap)
+        handles = [
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(i)), markersize=10)
+            for i in labels]
+
+        # 将图例放在图的外边
+        legend = ax.legend(handles, labels_to_class.values(), title="Classes", bbox_to_anchor=(1.05, 1),
+                           loc='upper left',mode='expand')
+        # plt.gca().add_artist(legend)
+        # 设置相等的轴比例
+        ax.set_aspect('equal', adjustable='box')
+
+        # plt.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], 1, labels)
+        # 创建自定义图例
+        # handles = [
+        #     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(i)), markersize=10)
+        #     for i in labels]
+
+        # 将图例放在图的外边
+        # legend = ax.legend(handles, labels.values(), title="Classes", bbox_to_anchor=(1.05, 1), loc='upper left')
+
+
+        plt.savefig('inlier.png', bbox_inches='tight')
         plt.show()
 
         pred_p = np.array(pred_p_list)  #预测标签列表
@@ -426,11 +462,11 @@ eval_dict = evaluate_fixmatch(args, best_net, dataset_dict)
 
 
 # Confusion matrix of closed-set classification
-fig = plt.figure()
-f, ax = plt.subplots(figsize=(12,10))
-cf_mat = eval_dict['closed_confusion_matrix']
-ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
-plt.show()
+# fig = plt.figure()
+# f, ax = plt.subplots(figsize=(12,10))
+# cf_mat = eval_dict['closed_confusion_matrix']
+# ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
+# plt.show()
 
 
 

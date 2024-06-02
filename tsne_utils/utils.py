@@ -128,6 +128,7 @@ def tsne(x, no_dims=2, initial_dims=50, perplexity=30.0, max_iter=2000):
 
     # Run iterations
     for iter in range(max_iter):
+        print(f"current iter:{iter}")
         # Compute pairwise affinities
         sum_y = np.sum(np.square(y), 1)
         '''
