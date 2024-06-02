@@ -287,17 +287,6 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
             pred_p = p.data.max(1)[1]
             pred_p_list.extend(pred_p.cpu().tolist())
 
-
-        # Run Y = tsne.tsne(X, no_dims, perplexity) to perform t-SNE on your dataset.
-        # X, labels = load_digits(return_X_y=True)
-        # Y = tsne(X, 2, 50, 20.0)
-        # from matplotlib import pyplot as plt
-        #
-        # plt.scatter(Y[:, 0], Y[:, 1], 20, labels)
-        # plt.show()
-
-
-
         y_true = np.array(y_true_list)
         closed_mask = y_true < args.num_classes
         open_mask = y_true >= args.num_classes
@@ -305,46 +294,30 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
 
         # 建立t_sne图
 
-        # feat_list=np.array(feat_list)[closed_mask]
-        # X = [torch.tensor(i) for i in feat_list]  # 把每个batch中的feature转为tensor
-        # X=feat_list
         X = torch.cat(feat_list, dim=0)  # 每个feature写成一行，结果是  数目*feature
         X=np.array(X.cpu())[closed_mask] #闭集数据
         labels = y_true[closed_mask]#闭集标签
         labels_to_class={0:'bird',1:'cat',2:'deer',3:'dog',4:'frog',5:'horse',6:"airplane",7:'automobile',8:'ship',9:'truck'}
-        # Y_low_dim = tsne(X, 2, 128, 20.0,max_iter=2000)
-        # Y_low_dim= TSNE(X,n_components=2, perplexity=30, n_iter=30)
-        tsne = TSNE(n_components=2, perplexity=30, n_iter=300)
+
+        tsne = TSNE(n_components=2, perplexity=30, n_iter=3000)
         Y_low_dim = tsne.fit_transform(X)
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        unique_categories = list(set(labels_to_class.items()))
+        fig, ax = plt.subplots(figsize=(10, 10))
 
-        category_to_number = {category:i  for i, category in labels_to_class.items()}
-        categories=[labels_to_class[i] for i in labels ]
-        colors = [category_to_number[category] for category in categories]
-        colormap = plt.cm.get_cmap('Set2', len(unique_categories))
+        scatter = ax.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], c=labels,s=2,cmap='tab10')
 
-        scatter = ax.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], c=colors,s=2,cmap=colormap)
-        handles = [
-            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(i)), markersize=10)
-            for i in labels]
+        # 获取图例元素
+        handles, _ = scatter.legend_elements()
+        # 添加图例
+        animal_classes = [0, 1, 2, 3, 4, 5]
+        animal_class_names = [labels_to_class[i] for i in animal_classes]
+        plt.legend(handles=handles, labels=animal_class_names, title="Animal Classes")
+        plt.title('t-SNE visualization of CIFAR-10 animal features')
+        plt.xlabel('t-SNE component 1')
+        plt.ylabel('t-SNE component 2')
+        plt.grid(False)
+        plt.show()
 
-        # 将图例放在图的外边
-        legend = ax.legend(handles, labels_to_class.values(), title="Classes", bbox_to_anchor=(1.05, 1),
-                           loc='upper left',mode='expand')
-        # plt.gca().add_artist(legend)
-        # 设置相等的轴比例
-        ax.set_aspect('equal', adjustable='box')
-
-        # plt.scatter(Y_low_dim[:, 0], Y_low_dim[:, 1], 1, labels)
-        # 创建自定义图例
-        # handles = [
-        #     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=scatter.cmap(scatter.norm(i)), markersize=10)
-        #     for i in labels]
-
-        # 将图例放在图的外边
-        # legend = ax.legend(handles, labels.values(), title="Classes", bbox_to_anchor=(1.05, 1), loc='upper left')
 
 
         plt.savefig('inlier.png', bbox_inches='tight')
@@ -356,9 +329,6 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False):
         close_acc = accuracy_score(y_true[closed_mask], pred_p[closed_mask])#在test set中，把inlier拿出来，测试模型对inlier分类的精确度
         closed_confusion_matrix = confusion_matrix(y_true[closed_mask], pred_p[closed_mask], normalize='true')
         np.set_printoptions(precision=3, suppress=True)
-
-
-
 
         o_acc_e_q = o_acc_e_hq = 0
         o_cfmat_e_q = None
