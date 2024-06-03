@@ -345,12 +345,9 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
 
         plt.xlabel('t-SNE component 1')
         plt.ylabel('t-SNE component 2')
-        plt.grid(False)
-        plt.show()
 
 
-
-        plt.savefig('visualiztion_of_all_class_features.png')
+        plt.savefig('all_classes.png')
         plt.show()
 
         pred_p = np.array(pred_p_list)  #预测标签列表
