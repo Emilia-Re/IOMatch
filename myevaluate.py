@@ -245,7 +245,7 @@ def evaluate_io(args, net, dataset_dict, extended_test=False):
 
         return eval_dict
 
-def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=True):
+def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=True,visualize=True):
     """
     evaluation function for open-set SSL setting
     """
@@ -253,16 +253,18 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
     full_loader = DataLoader(dataset_dict['test']['full'], batch_size=256, drop_last=False, shuffle=False, num_workers=4)
     if extended_test:  #原始cifar10的测试集加上其他ood数据，其他ood数据有svhn，高斯噪声、均值噪声、（还有一种忘了），每种ood数据量都是一样的
         extended_loader = DataLoader(dataset_dict['test']['extended'], batch_size=1024, drop_last=False, shuffle=False, num_workers=4)
+    #extended_loader中包含的数据是其他四个ood数据集直接拼接在一起的数据
 
     total_num = 0.0
     y_true_list = []#真实标签
     p_list = []
-    pred_p_list = []
+    pred_label_list = []
     pred_hat_q_list = []
     pred_q_list = []
     pred_hat_p_list = []
     ood_scores=[]
     feat_list=[]
+    pred_probability_list=[]
     with torch.no_grad():
         for data in tqdm(full_loader):
             x = data['x_lb']
@@ -284,77 +286,76 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
             feat_list.append(feature)
             # predictions p of closed-set classifier
             p = F.softmax(logits, 1)
-            pred_p = p.data.max(1)[1]
-            pred_p_list.extend(pred_p.cpu().tolist())
-
+            pred_label = p.data.max(1)[1] #返回的是预测的标签
+            pred_probability= p.data.max(1)[0]#返回的是softmax的最大值
+            pred_label_list.extend(pred_label.cpu().tolist())
+            pred_probability_list.extend(pred_probability.cpu().tolist())
         y_true = np.array(y_true_list)
         closed_mask = y_true < args.num_classes
         open_mask = y_true >= args.num_classes
-        if inlier_only:
-            y_true[open_mask] = args.num_classes#将所有的ood数据标记为args.num_classes，比如6分类任务，inlier标记为1-5，ood标记为6
-        else:
-            pass
-            #为了可视化，保留ood数据的标签，不再把ood数据当成一个类
-
-
-
-
-        X = torch.cat(feat_list, dim=0)  # 每个feature写成一行，结果是  数目*feature
-        if inlier_only:
-            X=np.array(X.cpu())[closed_mask] #闭集数据
-            labels = y_true[closed_mask]#闭集标签
-        else:
-            X = np.array(X.cpu())
-            labels = y_true
-        labels_to_class={0:'bird',1:'cat',2:'deer',3:'dog',4:'frog',5:'horse',6:"airplane",7:'automobile',8:'ship',9:'truck'}
 
         # 建立t_sne图
-        tsne = TSNE(n_components=2, perplexity=30, n_iter=3000)
-        low_dim = tsne.fit_transform(X)
+        if visualize==True:
+            if inlier_only:
+                y_true[open_mask] = args.num_classes#将所有的ood数据标记为args.num_classes，比如6分类任务，inlier标记为1-5，ood标记为6
+            else:
+                pass
+                #为了可视化，保留ood数据的标签，不再把ood数据当成一个类
 
-        fig, ax = plt.subplots(figsize=(10, 10))
+            X = torch.cat(feat_list, dim=0)  # 每个feature写成一行，结果是  数目*feature
+            if inlier_only:
+                X=np.array(X.cpu())[closed_mask] #闭集数据
+                labels = y_true[closed_mask]#闭集标签
+            else:
+                X = np.array(X.cpu())
+                labels = y_true
+            labels_to_class={0:'bird',1:'cat',2:'deer',3:'dog',4:'frog',5:'horse',6:"airplane",7:'automobile',8:'ship',9:'truck'}
+            tsne = TSNE(n_components=2, perplexity=30, n_iter=3000)
+            low_dim = tsne.fit_transform(X)
 
-        scatter = ax.scatter(low_dim[:, 0], low_dim[:, 1], c=labels,s=2,cmap='tab10')
+            fig, ax = plt.subplots(figsize=(10, 10))
 
-        # 获取图例元素
-        handles, label_of_handle = scatter.legend_elements()
-        Latexlabels_to_class = {
-            '$\\mathdefault{6}$': 'airplane',
-            '$\\mathdefault{7}$': 'automobile',
-            '$\\mathdefault{0}$': 'bird',
-            '$\\mathdefault{1}$': 'cat',
-            '$\\mathdefault{2}$': 'deer',
-            '$\\mathdefault{3}$': 'dog',
-            '$\\mathdefault{4}$': 'frog',
-            '$\\mathdefault{5}$': 'horse',
-            '$\\mathdefault{8}$': 'ship',
-            '$\\mathdefault{9}$': 'truck'
-        }
-        # 添加图例
-        animal_classes = [0, 1, 2, 3, 4, 5]
-        animal_class_names = [labels_to_class[i] for i in animal_classes]
-        all_class_names = [labels_to_class[i] for i in range(10)]
+            scatter = ax.scatter(low_dim[:, 0], low_dim[:, 1], c=labels,s=2,cmap='tab10')
 
-        if inlier_only:
-            plt.legend(handles=handles, labels=animal_class_names, title="Animal Classes")
-            plt.title('t-SNE visualization of CIFAR-10 animal features')
-        else:
-            plt.legend(handles=handles, labels=[Latexlabels_to_class[latex_label] for latex_label in label_of_handle], title="All Classes")
-            plt.title('t-SNE visualization of All CIFAR-10 class  features')
+            # 获取图例元素
+            handles, label_of_handle = scatter.legend_elements()
+            Latexlabels_to_class = {
+                '$\\mathdefault{6}$': 'airplane',
+                '$\\mathdefault{7}$': 'automobile',
+                '$\\mathdefault{0}$': 'bird',
+                '$\\mathdefault{1}$': 'cat',
+                '$\\mathdefault{2}$': 'deer',
+                '$\\mathdefault{3}$': 'dog',
+                '$\\mathdefault{4}$': 'frog',
+                '$\\mathdefault{5}$': 'horse',
+                '$\\mathdefault{8}$': 'ship',
+                '$\\mathdefault{9}$': 'truck'
+            }
+            # 添加图例
+            animal_classes = [0, 1, 2, 3, 4, 5]
+            animal_class_names = [labels_to_class[i] for i in animal_classes]
+            all_class_names = [labels_to_class[i] for i in range(10)]
 
-
-        plt.xlabel('t-SNE component 1')
-        plt.ylabel('t-SNE component 2')
+            if inlier_only:
+                plt.legend(handles=handles, labels=animal_class_names, title="Animal Classes")
+                plt.title('t-SNE visualization of CIFAR-10 animal features')
+            else:
+                plt.legend(handles=handles, labels=[Latexlabels_to_class[latex_label] for latex_label in label_of_handle], title="All Classes")
+                plt.title('t-SNE visualization of All CIFAR-10 class  features')
 
 
-        plt.savefig('all_classes.png')
-        plt.show()
+            plt.xlabel('t-SNE component 1')
+            plt.ylabel('t-SNE component 2')
 
-        pred_p = np.array(pred_p_list)  #预测标签列表
+
+            plt.savefig('all_classes.png')
+            plt.show()
+
+        pred_label = np.array(pred_label_list)  #预测标签列表
 
         # closed accuracy of p / hat_p on closed test data
-        close_acc = accuracy_score(y_true[closed_mask], pred_p[closed_mask])#在test set中，把inlier拿出来，测试模型对inlier分类的精确度
-        closed_confusion_matrix = confusion_matrix(y_true[closed_mask], pred_p[closed_mask], normalize='true')
+        close_acc = accuracy_score(y_true[closed_mask], pred_label[closed_mask])#在test set中，把inlier拿出来，测试模型对inlier分类的精确度
+        closed_confusion_matrix = confusion_matrix(y_true[closed_mask], pred_label[closed_mask], normalize='true')
         np.set_printoptions(precision=3, suppress=True)
 
         o_acc_e_q = o_acc_e_hq = 0
@@ -362,8 +363,17 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
         o_cfmat_e_hq = None
 
         # auroc
-        # auroc = roc_auc_score(y_true, y_score)#
-        ood_scores = np.array(ood_scores)  # 这里为了方便，ood记为1，id记为0
+        # auroc = roc_auc_score(y_true, y_score)
+        #辨识id和ood的标准
+        threshold=0.9999
+        # ood_pred=(pred_probability_list>threshold).astype(int)   #id 标记为1，ood标记为0
+        ood_probability=np.array(pred_probability_list)
+        ood_pred=ood_probability<threshold
+        ood_gt=(closed_mask).astype(int)  #id 标记为1，ood标记为0
+        ood_pred_acc=sum((ood_pred==ood_gt))/len(ood_pred)
+        print(f"ood_pred_acc:{ood_pred_acc}")
+        auroc = roc_auc_score(y_true=ood_gt,y_score= ood_probability)
+        print(f"AUROC: {auroc}")
         gt_id_or_ood = [0 if val in range(args.num_classes) else 1 for val in y_true_list]
         gt_id_or_ood = np.array(gt_id_or_ood)
 
@@ -392,8 +402,8 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
 
                 # predictions p of closed-set classifier
                 p = F.softmax(logits, 1)
-                pred_p = p.data.max(1)[1]
-                pred_p_list.extend(pred_p.cpu().tolist())
+                pred_label = p.data.max(1)[1]
+                pred_label_list.extend(pred_label.cpu().tolist())
 
                 # predictions hat_q of (closed-set + multi-binary) classifiers
                 r = F.softmax(logits_mb.view(logits_mb.size(0), 2, -1), 1)
@@ -451,7 +461,7 @@ over_write_args_from_file(args, args.c)
 args.data_dir = 'data'
 dataset_dict = get_dataset(args, args.algorithm, args.dataset, args.num_labels, args.num_classes, args.data_dir, eval_open=True)
 best_net = load_model_at('best')
-eval_dict = evaluate_fixmatch(args, best_net, dataset_dict,inlier_only=False)
+eval_dict = evaluate_fixmatch(args, best_net, dataset_dict,inlier_only=False,visualize=False,extended_test=True)
 #默认设置     cifar100_2000   seen/unseen split of 80/20, 25 labels per seen class
 
 

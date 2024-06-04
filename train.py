@@ -193,7 +193,7 @@ def main(args):
         args.world_size = ngpus_per_node * args.world_size
 
         # args=(,) means the arguments of main_worker
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args),join=True)
     else:
         main_worker(args.gpu, ngpus_per_node, args)
 
@@ -281,6 +281,8 @@ def main_worker(gpu, ngpus_per_node, args):
         model.save_model('latest_model.pth', save_path)
 
     logging.warning(f"GPU {args.rank} training is FINISHED")
+    if args.multiprocessing_distributed:
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":
