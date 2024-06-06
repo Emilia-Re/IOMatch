@@ -377,7 +377,8 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
         gt_id_or_ood = [0 if val in range(args.num_classes) else 1 for val in y_true_list]
         gt_id_or_ood = np.array(gt_id_or_ood)
 
-
+        ood_pred_label_list=[]
+        ood_pred_probability_list=[]
         if extended_test:
             unk_scores = [] # K+1类的概率
             unk_scores_q = []
@@ -395,38 +396,22 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
                 num_batch = y.shape[0]
                 total_num += num_batch
 
+
                 outputs = net(x)
                 logits = outputs['logits']
-                logits_mb = outputs['logits_mb']
-                logits_open = outputs['logits_open']
-
+                feature = outputs['feat']
+                feat_list.append(feature)
                 # predictions p of closed-set classifier
                 p = F.softmax(logits, 1)
-                pred_label = p.data.max(1)[1]
-                pred_label_list.extend(pred_label.cpu().tolist())
+                ood_pred_label = p.data.max(1)[1]  # 返回的是预测的标签
+                ood_pred_probability = p.data.max(1)[0]  # 返回的是softmax的最大值
+                ood_pred_label_list.extend(ood_pred_label.cpu().tolist())
+                ood_pred_probability_list.extend(ood_pred_probability.cpu().tolist())#softmax预测的最大值
+            ood_gt=np.zeros(len(extended_loader.dataset))#1代表id，0代表ood
+            additional_dataset_auroc=roc_auc_score(ood_gt,ood_pred_probability_list)
+            print(f'other four dataset auroc:{additional_dataset_auroc}')
 
-                # predictions hat_q of (closed-set + multi-binary) classifiers
-                r = F.softmax(logits_mb.view(logits_mb.size(0), 2, -1), 1)
-                tmp_range = torch.arange(0, logits_mb.size(0)).long().cuda()
-                hat_q = torch.zeros((num_batch, args.num_classes + 1)).cuda()
-                o_neg = r[tmp_range, 0, :]
-                o_pos = r[tmp_range, 1, :]
-                unk_score = torch.sum(p * o_neg, 1)
-                unk_scores.extend(unk_score.cpu().tolist())
-                hat_q[:, :args.num_classes] = p * o_pos
-                hat_q[:, args.num_classes] = torch.sum(p * o_neg, 1)
-                pred_hat_q = hat_q.data.max(1)[1]
-                pred_hat_q_list.extend(pred_hat_q.cpu().tolist())
 
-                # predictions q of open-set classifier
-                q = F.softmax(logits_open, 1)
-                pred_q = q.data.max(1)[1]
-                pred_q_list.extend(pred_q.cpu().tolist())
-
-                # prediction hat_p of open-set classifier
-                hat_p = q[:, :args.num_classes] / q[:, :args.num_classes].sum(1).unsqueeze(1)#（不太确定）和上边的方式相比，只是归一化方式不同，上边是softmax归一化，下边是直接除以他们的和进行归一
-                pred_hat_p = hat_p.data.max(1)[1]
-                pred_hat_p_list.extend(pred_hat_p.cpu().tolist())
 
             y_true = np.array(y_true_list)
             open_mask = y_true >= args.num_classes
