@@ -106,12 +106,16 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
             y_true_list.extend(y.cpu().tolist())
             y_pred_closed_list.extend(pred_closed.cpu().tolist())
             y_pred_ova_list.extend(pred_open.cpu().tolist())
-
+    results['unk_scores_list']=np.array(unk_scores_list)
     y_true = np.array(y_true_list)
+    results['original_gt']=y_true_list
 
     closed_mask = y_true < num_classes
     open_mask = y_true >= num_classes
     y_true[open_mask] = num_classes
+    results['k_plus_1_gt']=y_true
+    results['id_mask']=closed_mask
+    results['ood_mask']=open_mask
 
     y_pred_closed = np.array(y_pred_closed_list)
     y_pred_ova = np.array(y_pred_ova_list)

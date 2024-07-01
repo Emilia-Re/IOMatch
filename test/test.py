@@ -19,7 +19,7 @@ axes[0].axvline(x=0.42, color='green', linestyle='--')
 axes[0].set_title('TinyImageNet')
 axes[0].set_xlabel('OOD score')
 axes[0].set_ylabel('#Sample')
-axes[0].legend()#用于显示标签说明
+axes[0].legend()#
 
 # Gaussian Noise 图
 sns.histplot(cifar_scores_gaussian, bins=50, kde=False, color='skyblue', ax=axes[1], label='CIFAR')
