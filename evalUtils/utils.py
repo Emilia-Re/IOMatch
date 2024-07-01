@@ -140,6 +140,7 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
     ood_pred=unk_scores_list
     cifar_test_auroc=roc_auc_score(y_true=ood_gt,y_score=unk_scores_list)
     results['cifar_test_auroc']=cifar_test_auroc
+
     #AUROC on original CIFAR dataset and extended dataset
 
     if extended_test:

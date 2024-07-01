@@ -15,6 +15,11 @@ if __name__=='__main__':
     # Confusion matrix of open-set classification (OpenMatch-CIFAR-50-200)
     fig = plt.figure()
     f, ax = plt.subplots(figsize=(12, 10))
+
     cf_mat = eval_dict['o_cfmat_f_hq']
-    ax = sns.heatmap(cf_mat, annot=True,cmap='YlGn', linewidth=0.5)
+
+    ax = sns.heatmap(cf_mat, annot=True,cmap='YlGn', linewidth=0.5,fmt="d")
+    plt.title('Confusion Matrix ')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('Ground Truth')
     plt.show()
