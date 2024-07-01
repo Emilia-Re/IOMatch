@@ -367,18 +367,18 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
         #辨识id和ood的标准
         threshold=0.9999
         # ood_pred=(pred_probability_list>threshold).astype(int)   #id 标记为1，ood标记为0
-        ood_probability=np.array(pred_probability_list)
-        ood_pred=ood_probability<threshold
-        ood_gt=(closed_mask).astype(int)  #id 标记为1，ood标记为0
-        ood_pred_acc=sum((ood_pred==ood_gt))/len(ood_pred)
+        ood_probability_original_dataset=np.array(pred_probability_list)
+        ood_pred=ood_probability_original_dataset<threshold
+        ood_gt_original_dataset=(closed_mask).astype(int)  #id 标记为1，ood标记为0
+        ood_pred_acc=sum((ood_pred==ood_gt_original_dataset))/len(ood_pred)
         print(f"ood_pred_acc:{ood_pred_acc}")
-        auroc = roc_auc_score(y_true=ood_gt,y_score= ood_probability)
+        auroc = roc_auc_score(y_true=ood_gt_original_dataset,y_score= ood_probability_original_dataset)
         print(f"AUROC: {auroc}")
         gt_id_or_ood = [0 if val in range(args.num_classes) else 1 for val in y_true_list]
         gt_id_or_ood = np.array(gt_id_or_ood)
 
         ood_pred_label_list=[]
-        ood_pred_probability_list=[]
+        ood_pred_probability_list_extended_dataset=[]
         if extended_test:
             unk_scores = [] # K+1类的概率
             unk_scores_q = []
@@ -406,10 +406,47 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
                 ood_pred_label = p.data.max(1)[1]  # 返回的是预测的标签
                 ood_pred_probability = p.data.max(1)[0]  # 返回的是softmax的最大值
                 ood_pred_label_list.extend(ood_pred_label.cpu().tolist())
-                ood_pred_probability_list.extend(ood_pred_probability.cpu().tolist())#softmax预测的最大值
-            ood_gt=np.zeros(len(extended_loader.dataset))#1代表id，0代表ood
-            additional_dataset_auroc=roc_auc_score(ood_gt,ood_pred_probability_list)
+                ood_pred_probability_list_extended_dataset.extend(ood_pred_probability.cpu().tolist())#softmax预测的最大值
+            ood_gt_in_extendeded_data=np.zeros(len(extended_loader.dataset))#id 标记为1，ood标记为0
+
+
+            #为了计算在其他四个数据集（作为一个整体）的auroc，将原数据集中的测试集中的inlier和其他四个数据集做拼接（参考openMatch的做法 ）
+            additional_dataset_auroc=roc_auc_score(y_true=np.r_[ood_gt_original_dataset[closed_mask],ood_gt_in_extendeded_data],
+                                                   y_score=np.r_[ood_probability_original_dataset[closed_mask],ood_pred_probability_list_extended_dataset])
+            additional_dataset_auroc1 = roc_auc_score(
+                y_true=np.r_[ood_gt_original_dataset[closed_mask], ood_gt_in_extendeded_data[:10000]],
+                y_score=np.r_[
+                    ood_probability_original_dataset[closed_mask], ood_pred_probability_list_extended_dataset[:10000]])
+
+            additional_dataset_auroc2 = roc_auc_score(
+                y_true=np.r_[ood_gt_original_dataset[closed_mask], ood_gt_in_extendeded_data[10000:20000]],
+                y_score=np.r_[
+                        ood_probability_original_dataset[closed_mask],
+                        ood_pred_probability_list_extended_dataset[10000:20000]])
+            additional_dataset_auroc3 = roc_auc_score(
+                y_true=np.r_[ood_gt_original_dataset[closed_mask], ood_gt_in_extendeded_data[20000:30000]],
+                y_score=np.r_[
+                    ood_probability_original_dataset[closed_mask],
+                    ood_pred_probability_list_extended_dataset[20000:30000]])
+            additional_dataset_auroc4 = roc_auc_score(
+                y_true=np.r_[ood_gt_original_dataset[closed_mask], ood_gt_in_extendeded_data[30000:40000]],
+                y_score=np.r_[
+                    ood_probability_original_dataset[closed_mask],
+                    ood_pred_probability_list_extended_dataset[30000:40000]])
+            print(f"AUROC1:{additional_dataset_auroc1}")
+            print(f"AUROC2:{additional_dataset_auroc2}")
+            print(f"AUROC3:{additional_dataset_auroc3}")
+            print(f"AUROC4:{additional_dataset_auroc4}")
+            #原始数据集id数据加上其他四个数据集（作为一个整体）的ood真实标签
+            combined_gt=np.r_[ood_gt_original_dataset[closed_mask],ood_gt_in_extendeded_data]
+            #原始数据集id数据加上其他四个数据集（作为一个整体）的ood预测值
+            combined_prob=np.r_[ood_probability_original_dataset[closed_mask],ood_pred_probability_list_extended_dataset]
             print(f'other four dataset auroc:{additional_dataset_auroc}')
+            threshold=0.9
+            over_threshold_mask=combined_prob>threshold#选出id数据
+            result=over_threshold_mask.astype(int)==combined_gt
+            result=result.astype(int)
+            print(f'ood binary classify acc {sum(result)/len(result)}')
 
 
 
@@ -421,23 +458,23 @@ def evaluate_fixmatch(args, net, dataset_dict, extended_test=False,inlier_only=T
             pred_hat_q = np.array(pred_hat_q_list)
 
             # open accuracy of q / hat_q on extended test data
-            o_acc_e_q = balanced_accuracy_score(y_true, pred_q)
-            o_acc_e_hq = balanced_accuracy_score(y_true, pred_hat_q)
-            o_cfmat_e_q = confusion_matrix(y_true, pred_q, normalize='true')
-            o_cfmat_e_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
+            # o_acc_e_q = balanced_accuracy_score(y_true, pred_q)
+            # o_acc_e_hq = balanced_accuracy_score(y_true, pred_hat_q)
+            # o_cfmat_e_q = confusion_matrix(y_true, pred_q, normalize='true')
+            # o_cfmat_e_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
 
-
-        eval_dict = {'closed_confusion_matrix':closed_confusion_matrix,
-                     'o_acc_e_q': o_acc_e_q, 'o_acc_e_hq': o_acc_e_hq,
-                     'o_cfmat_e_q': o_cfmat_e_q, 'o_cfmat_e_hq': o_cfmat_e_hq,
-                     }
+        #
+        # eval_dict = {'closed_confusion_matrix':closed_confusion_matrix,
+        #              'o_acc_e_q': o_acc_e_q, 'o_acc_e_hq': o_acc_e_hq,
+        #              'o_cfmat_e_q': o_cfmat_e_q, 'o_cfmat_e_hq': o_cfmat_e_hq,
+        #              }
         print(f"Closed set accuracy:{close_acc}")
         # print(f"#############################################################\n"
         #       f" Open Accuracy on Extended Test Data (q / hq): {o_acc_e_q * 100:.2f} / {o_acc_e_hq * 100:.2f}\n"
         #       f"#############################################################\n"
         #     )
 
-        return eval_dict
+        # return eval_dict
 
 #待测的实验设置
 config='config/openset_cv/jhy_experiment/fixmatch_cifar10_300_0_noisy_unlabeled.yaml'
