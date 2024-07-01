@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is the official repository for our **ICCV 2023** paper:
+This is the unofficial repository for  **ICCV 2023** paper:
 
 > **IOMatch: Simplifying Open-Set Semi-Supervised Learning with Joint Inliers and Outliers Utilization**</br>
 > Zekun Li, Lei Qi, Yinghuan Shi*, Yang Gao</br>
