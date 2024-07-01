@@ -24,6 +24,26 @@ def testf():
 # parser.add_argument('--c', type=str, default='')
 
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+
+def id_ood_histogram(id_unk_scores,ood_unk_scores):
+    # 绘制直方图
+    fig, axes = plt.subplots(1, 1, figsize=(10, 6))
+    # TinyImageNet 图
+    sns.histplot(id_unk_scores, bins=50,kde=False, color='skyblue', ax=axes, label='ID')
+    sns.histplot(ood_unk_scores, bins=50, kde=False, color='sandybrown', ax=axes, label='OOD')
+    axes.axvline(x=0.42, color='green', linestyle='--')
+    axes.set_title('CIFAR10')
+    axes.set_xlabel('OOD score')
+    axes.set_ylabel(' Num Samples')
+    axes.legend()  #
+    plt.tight_layout()
+    plt.show()
+
+
 def load_model_at(args,step='best'):
     args.step = step
     if step == 'best':
@@ -198,6 +218,8 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
           )
 
     return results
+
+
 
 
 def evaluate_io(args, net, dataset_dict, extended_test=True):
@@ -393,3 +415,5 @@ if __name__=='__main__':
     cf_mat = eval_dict['o_cfmat_f_hq']
     ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
     plt.show()
+
+

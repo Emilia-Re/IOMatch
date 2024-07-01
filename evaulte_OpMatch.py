@@ -11,13 +11,14 @@ if __name__=='__main__':
                                eval_open=True)
     best_net = load_model_at(args,'best')
     eval_dict = evaluate_open(best_net, dataset_dict, num_classes=args.num_classes)
-
+    id_ood_histogram(id_unk_scores=eval_dict['unk_scores_list'][eval_dict['id_mask']],
+                     ood_unk_scores=eval_dict['unk_scores_list'][eval_dict['ood_mask']]
+                     )
     # Confusion matrix of open-set classification (OpenMatch-CIFAR-50-200)
     fig = plt.figure()
     f, ax = plt.subplots(figsize=(12, 10))
 
     cf_mat = eval_dict['o_cfmat_f_hq']
-
     ax = sns.heatmap(cf_mat, annot=True,cmap='YlGn', linewidth=0.5,fmt="d")
     plt.title('Confusion Matrix ')
     plt.xlabel('Predicted Label')
