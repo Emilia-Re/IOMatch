@@ -18,12 +18,13 @@ from semilearn.core.utils import get_net_builder, get_dataset, over_write_args_f
 from semilearn.algorithms.openmatch.openmatch import OpenMatchNet
 from semilearn.algorithms.iomatch.iomatch import IOMatchNet
 import argparse
+def testf():
+    print("test fucntion")
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--c', type=str, default='')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--c', type=str, default='')
 
-
-def load_model_at(step='best'):
+def load_model_at(args,step='best'):
     args.step = step
     if step == 'best':
         args.load_path = '/'.join(args.load_path.split('/')[1:-1]) + "/model_best.pth"
@@ -74,7 +75,7 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
     y_true_list = []
     y_pred_closed_list = []
     y_pred_ova_list = []
-
+    unk_scores_list=[]
     results = {}
 
     with torch.no_grad():
@@ -100,8 +101,8 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
             tmp_range = torch.arange(0, logits_open.size(0)).long().cuda()
             unk_score = probs_open[tmp_range, 0, pred_closed]
             pred_open = pred_closed.clone()
-            pred_open[unk_score > 0.5] = num_classes
-
+            pred_open[unk_score > 0.5] = num_classes    #unk_score是预测为ood的概率,num_classes代表ood类别的标签
+            unk_scores_list.extend(unk_score.cpu().tolist())
             y_true_list.extend(y.cpu().tolist())
             y_pred_closed_list.extend(pred_closed.cpu().tolist())
             y_pred_ova_list.extend(pred_open.cpu().tolist())
@@ -119,15 +120,27 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
     y_true_closed = y_true[closed_mask]
     y_pred_closed = y_pred_closed[closed_mask]
     closed_acc = accuracy_score(y_true_closed, y_pred_closed)
-    closed_cfmat = confusion_matrix(y_true_closed, y_pred_closed, normalize='true')
-    results['c_acc_c_p'] = closed_acc
+    closed_cfmat = confusion_matrix(y_true_closed, y_pred_closed, normalize=None)
+    results['c_acc_c_p'] = closed_acc  # Closed Accuracy on Closed Test Data
     results['c_cfmat_c_p'] = closed_cfmat
 
     # Open Accuracy on Full Test Data
     open_acc = balanced_accuracy_score(y_true, y_pred_ova)
-    open_cfmat = confusion_matrix(y_true, y_pred_ova, normalize='true')
-    results['o_acc_f_hq'] = open_acc
+    open_cfmat = confusion_matrix(y_true, y_pred_ova, normalize=None)
+    results['o_acc_f_hq'] = open_acc     # Open Accuracy on Full Test Data
     results['o_cfmat_f_hq'] = open_cfmat
+
+
+    #AUROC on original  CIFAR test dataset
+    #1:ood
+    #0:id
+    ood_gt=np.zeros(len(y_true_list))
+    ood_gt[closed_mask]=0
+    ood_gt[open_mask]=1
+    ood_pred=unk_scores_list
+    cifar_test_auroc=roc_auc_score(y_true=ood_gt,y_score=unk_scores_list)
+    results['cifar_test_auroc']=cifar_test_auroc
+    #AUROC on original CIFAR dataset and extended dataset
 
     if extended_test:
         with torch.no_grad():
@@ -172,6 +185,7 @@ def evaluate_open(net, dataset_dict, num_classes, extended_test=True):
         results['o_cfmat_e_hq'] = open_cfmat
 
     print(f"#############################################################\n"
+          f" AUROC on original test dataset: {results['cifar_test_auroc'] * 100:.2f}\n"
           f" Closed Accuracy on Closed Test Data: {results['c_acc_c_p'] * 100:.2f}\n"
           f" Open Accuracy on Full Test Data:     {results['o_acc_f_hq'] * 100:.2f}\n"
           f" Open Accuracy on Extended Test Data: {results['o_acc_e_hq'] * 100:.2f}\n"
@@ -359,21 +373,6 @@ if __name__=='__main__':
                                eval_open=True)
     best_net = load_model_at('best')
     eval_dict = evaluate_io(args, best_net, dataset_dict)
-
-    # Confusion matrix of closed-set classification (IOMatch-CIFAR-50-1250)
-    fig = plt.figure()
-    f, ax = plt.subplots(figsize=(12, 10))
-    cf_mat = eval_dict['c_cfmat_c_p']
-    ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
-    plt.show()
-
-    # Confusion matrix of open-set classification (IOMatch-CIFAR-50-1250)
-    fig = plt.figure()
-    f, ax = plt.subplots(figsize=(12, 10))
-    cf_mat = eval_dict['o_cfmat_f_q']
-    ax = sns.heatmap(cf_mat, cmap='YlGn', linewidth=0.5)
-    plt.show()
-
     #OpenMatch
     args = parser.parse_args(args=['--c', 'config/openset_cv/openmatch/openmatch_cifar100_200_1.yaml'])
     over_write_args_from_file(args, args.c)

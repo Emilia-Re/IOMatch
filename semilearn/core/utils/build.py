@@ -75,7 +75,7 @@ def get_dataset(args, algorithm, dataset, num_labels, num_classes, data_dir='./d
     test_dset = None
     if dataset in ["cifar10_openset", "cifar100_openset"]:
         lb_dset, ulb_dset, eval_dset, eval_full_dset = get_cifar_openset(args, algorithm, dataset, num_labels,
-                                                                         num_classes, data_dir=data_dir,pure_unlabeled=args.pure_unlabeled)
+                                                                         num_classes, data_dir=data_dir)
         if eval_open:
             test_dset = {'full': eval_full_dset}
     elif dataset == 'imagenet30':

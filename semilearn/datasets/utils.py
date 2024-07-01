@@ -55,7 +55,7 @@ def sample_labeled_data(args, data, target, num_labels, num_classes, index=None)
 
     dump_dir = os.path.join(base_dir, 'data', args.dataset, 'labeled_idx')
     os.makedirs(dump_dir, exist_ok=True)
-    if args.pure_unlabeled==True:
+    if hasattr(args,'pure_unlabeled')  and args.pure_unlabeled==True :
         pure_unlabeled="pure_unlabeled"
     else :
         pure_unlabeled='noisy_unlabeled'
