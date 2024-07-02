@@ -33,8 +33,8 @@ def id_ood_histogram(args,id_unk_scores,ood_unk_scores,title:str=None):
     # 绘制直方图
     fig, axes = plt.subplots(1, 1, figsize=(10, 6))
     # TinyImageNet 图
-    sns.histplot(id_unk_scores,bin=200,kde=False, color='skyblue', ax=axes, label='ID')
-    sns.histplot(ood_unk_scores,bin=200, kde=False, color='sandybrown', ax=axes, label='OOD')
+    sns.histplot(id_unk_scores,bins=200,kde=False, color='skyblue', ax=axes, label='ID')
+    sns.histplot(ood_unk_scores,bins=200, kde=False, color='sandybrown', ax=axes, label='OOD')
     # axes.axvline(x=0.42, color='green', linestyle='--')
     axes.set_title(title)
     axes.set_xlabel('OOD score')
@@ -173,6 +173,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     #extended_test按照顺序为['svhn', 'lsun', 'gaussian', 'uniform']，每个数据集中数据量为10000
     ood_names = ['svhn', 'lsun', 'gaussian', 'uniform']
     unk_scores_list_extd=[]
+    probs_list_extd=[]
     if extended_test:
         with torch.no_grad():
             for data in tqdm(extended_loader):
@@ -198,6 +199,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
                 unk_score = probs_open[tmp_range, 0, pred_closed]
                 pred_open = pred_closed.clone()
                 pred_open[unk_score > 0.5] = num_classes
+                probs_list_extd.extend(probs.cpu().tolist())
                 unk_scores_list_extd.extend(unk_score.cpu().tolist())
                 y_true_list.extend(y.cpu().tolist())
                 y_pred_closed_list.extend(pred_closed.cpu().tolist())
