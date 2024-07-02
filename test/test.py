@@ -1,3 +1,5 @@
+import os.path
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -16,6 +18,7 @@ def id_ood_histogram(id_unk_scores= np.random.normal(0.4, 0.01, 5000),ood_unk_sc
     axes.set_ylabel(' Num Samples')
     axes.legend()  #
     plt.tight_layout()
+    plt.savefig(os.path.join("dir",'test_img'))
     plt.show()
 
 
