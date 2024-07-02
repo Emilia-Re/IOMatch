@@ -3,6 +3,7 @@ import os.path
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import torch
 
 
 def id_ood_histogram(id_unk_scores= np.random.normal(0.4, 0.01, 5000),ood_unk_scores= np.random.normal(0.43, 0.01, 5000)):
@@ -24,6 +25,7 @@ def id_ood_histogram(id_unk_scores= np.random.normal(0.4, 0.01, 5000),ood_unk_sc
 
 # 示例数据
 if __name__=='__main__':
-    a=np.float32(1.2)
-    print(a)
-    print(f'a:{a:.2f}')
+    a=torch.tensor(1.0)
+    a=a.to('cuda:0')
+    b=a.is_cuda
+    print(b)
