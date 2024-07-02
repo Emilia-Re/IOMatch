@@ -33,8 +33,8 @@ def id_ood_histogram(args,id_unk_scores,ood_unk_scores,title:str=None):
     # 绘制直方图
     fig, axes = plt.subplots(1, 1, figsize=(10, 6))
     # TinyImageNet 图
-    sns.histplot(id_unk_scores,kde=False, color='skyblue', ax=axes, label='ID')
-    sns.histplot(ood_unk_scores, kde=False, color='sandybrown', ax=axes, label='OOD')
+    sns.histplot(id_unk_scores,bin=200,kde=False, color='skyblue', ax=axes, label='ID')
+    sns.histplot(ood_unk_scores,bin=200, kde=False, color='sandybrown', ax=axes, label='OOD')
     # axes.axvline(x=0.42, color='green', linestyle='--')
     axes.set_title(title)
     axes.set_xlabel('OOD score')
