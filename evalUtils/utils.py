@@ -209,11 +209,22 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
         y_true[open_mask] = num_classes
         y_pred_ova = np.array(y_pred_ova_list)
 
-        #bulid visulzation
+        #bulid visulzation and calculate AUROC on extended dataset
+        auroc_other={}
         for i,ood_name in enumerate(ood_names):
             id_ood_histogram(args=args, id_unk_scores=results['unk_scores_list'][results['id_mask']],
-                         ood_unk_scores=unk_scores_list_extd[10000*(i-1):10000*i],
-                         title='CIFAR10 VS '+ood_name, img_save_dir=args.img_save_dir)
+                         ood_unk_scores=unk_scores_list_extd[10000*(i):10000*(i+1)],
+                         title=args.algorithm+' CIFAR10 VS '+ood_name)
+            #AUROC against other dataset
+            pred=np.hstack((np.array(unk_scores_list)[closed_mask],unk_scores_list_extd[10000*(i):10000*(i+1)]))
+            gt=np.zeros(len(pred))
+            gt[-10000:]=1
+            auroc_other[ood_name]=roc_auc_score(y_true=gt,y_score=pred)
+        print(f"#############################################################\n")
+        for i,ood_name in enumerate(ood_names):
+            print(f"AUROC :CIFAR10-6 against {ood_name}:{auroc_other[ood_name]*100:.2f} ")
+
+
 
         # Open Accuracy on Extended Test Data
         open_acc = balanced_accuracy_score(y_true, y_pred_ova)

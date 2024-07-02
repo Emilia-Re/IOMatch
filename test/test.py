@@ -24,4 +24,6 @@ def id_ood_histogram(id_unk_scores= np.random.normal(0.4, 0.01, 5000),ood_unk_sc
 
 # 示例数据
 if __name__=='__main__':
-    id_ood_histogram()
+    a=np.float32(1.2)
+    print(a)
+    print(f'a:{a:.2f}')

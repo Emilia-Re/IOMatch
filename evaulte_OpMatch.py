@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-
 from evalUtils import *
 
 if __name__=='__main__':
@@ -17,7 +15,7 @@ if __name__=='__main__':
     title = 'OPMatch CIFAR10-6 VS CIFAR10-4'
     id_ood_histogram(args=args, id_unk_scores=eval_dict['unk_scores_list'][eval_dict['id_mask']],
                      ood_unk_scores=eval_dict['unk_scores_list'][eval_dict['ood_mask']],
-                     title=title,img_save_dir=args.img_save_dir)
+                     title=title)
     # Confusion matrix of open-set classification (OpenMatch-CIFAR-50-200)
     fig = plt.figure()
     f, ax = plt.subplots(figsize=(12, 10))
