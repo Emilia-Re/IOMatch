@@ -4,7 +4,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--c', type=str, default='')
     #OpenMatch
-    args = parser.parse_args(args=['--c', 'config/openset_cv/openmatch/openmatch_cifar10_150_0.yaml'])
+    args = parser.parse_args(args=['--c', 'config/openset_cv/openmatch/openmatch_cifar10_300_0.yaml'])
     over_write_args_from_file(args, args.c)
     args.img_save_dir=os.path.join(args.save_dir,args.save_name)
     args.data_dir = 'data'
