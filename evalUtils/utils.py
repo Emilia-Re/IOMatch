@@ -88,11 +88,14 @@ def load_model_at(args,step='best'):
 
 
 def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
+    seed=0
+    torch.manual_seed(seed)
+    np.random.seed(seed)
     full_loader = DataLoader(dataset_dict['test']['full'], batch_size=256, drop_last=False, shuffle=False,
                              num_workers=4)
     if extended_test:
         extended_loader = DataLoader(dataset_dict['test']['extended'], batch_size=1024, drop_last=False, shuffle=False,
-                                     num_workers=4)
+                                     num_workers=4)#TODO :shuffle时False，为什么相同位置的数据会不一样.
 
     total_num = 0.0
     y_true_list = []
@@ -100,7 +103,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     y_pred_ova_list = []
     unk_scores_list=[]
     results = {}
-
+    logit_list=[]
     with torch.no_grad():
         for data in tqdm(full_loader):
             x = data['x_lb']
@@ -125,10 +128,12 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
             unk_score = probs_open[tmp_range, 0, pred_closed]
             pred_open = pred_closed.clone()
             pred_open[unk_score > 0.5] = num_classes    #unk_score是预测为ood的概率,num_classes代表ood类别的标签
+            logit_list.append(logits.cpu().tolist())
             unk_scores_list.extend(unk_score.cpu().tolist())
             y_true_list.extend(y.cpu().tolist())
             y_pred_closed_list.extend(pred_closed.cpu().tolist())
             y_pred_ova_list.extend(pred_open.cpu().tolist())
+    logit_list=np.vstack(logit_list)
     results['unk_scores_list']=np.array(unk_scores_list)
     y_true = np.array(y_true_list)
     results['original_gt']=y_true_list
@@ -174,6 +179,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     ood_names = ['svhn', 'lsun', 'gaussian', 'uniform']
     unk_scores_list_extd=[]
     probs_list_extd=[]
+    logits_list_extd=[]
     if extended_test:
         with torch.no_grad():
             for data in tqdm(extended_loader):
@@ -199,12 +205,13 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
                 unk_score = probs_open[tmp_range, 0, pred_closed]
                 pred_open = pred_closed.clone()
                 pred_open[unk_score > 0.5] = num_classes
+                logits_list_extd.append(logits.cpu().tolist())
                 probs_list_extd.extend(probs.cpu().tolist())
                 unk_scores_list_extd.extend(unk_score.cpu().tolist())
                 y_true_list.extend(y.cpu().tolist())
                 y_pred_closed_list.extend(pred_closed.cpu().tolist())
                 y_pred_ova_list.extend(pred_open.cpu().tolist())
-
+        logits_list_extd=np.vstack(logits_list_extd)
         y_true = np.array(y_true_list)
         unk_scores_list_extd=np.array(unk_scores_list_extd)
         open_mask = y_true >= num_classes
