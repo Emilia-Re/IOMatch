@@ -104,6 +104,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     unk_scores_list=[]
     results = {}
     logit_list=[]
+    feat_list=[]
     with torch.no_grad():
         for data in tqdm(full_loader):
             x = data['x_lb']
@@ -119,7 +120,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
             total_num += num_batch
 
             out = net(x)
-            logits, logits_open = out['logits'], out['logits_open']
+            logits, logits_open,feat = out['logits'], out['logits_open'],out['feat']
             pred_closed = logits.data.max(1)[1]
 
             probs = F.softmax(logits, 1)
@@ -128,6 +129,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
             unk_score = probs_open[tmp_range, 0, pred_closed]
             pred_open = pred_closed.clone()
             pred_open[unk_score > 0.5] = num_classes    #unk_score是预测为ood的概率,num_classes代表ood类别的标签
+            feat_list.append(feat.cpu().tolist())
             logit_list.append(logits.cpu().tolist())
             unk_scores_list.extend(unk_score.cpu().tolist())
             y_true_list.extend(y.cpu().tolist())
@@ -147,6 +149,9 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
 
     y_pred_closed = np.array(y_pred_closed_list)
     y_pred_ova = np.array(y_pred_ova_list)
+
+    #Calculate mean embedding of every id class
+
 
     # Closed Accuracy on Closed Test Data
     y_true_closed = y_true[closed_mask]

@@ -1,6 +1,11 @@
+import random
+
+import numpy as np
+
 from evalUtils import *
 
 if __name__=='__main__':
+    np.random.seed(0)
     parser = argparse.ArgumentParser()
     parser.add_argument('--c', type=str, default='')
     #OpenMatch
