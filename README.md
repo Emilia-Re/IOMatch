@@ -106,6 +106,15 @@ After training, the best checkpoints will be saved in ``./saved_models``. The cl
 
 # jhy-experiment result
 
+# Spearman correlation and p-value between confusion matrix and cosine similarity matrix of class mean feature
+
+| group                    |correlation|p-value|
+|--------------------------|--|--|
+| openmatch_cifar10_300_0  |0.6373592738068631|8.45552442445271e-07|
+| openmatch_cifar10_150_0  |0.637656383137745|8.326121467393799e-07|
+| openmatch_cifar10_600_0  |0.7920477330628994|1.2177836556139634e-11|
+| openmatch_cifar10_2400_0 |0.760007811116261|2.4028300019881487e-10|
+
 cifar10上openmatch实验，其中每组中后边的数字代表标记数据总数
 
 | group       |acc|

@@ -2,6 +2,8 @@ import os
 import sys
 from collections import defaultdict
 
+from scipy.stats import spearmanr
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 import pprint
 import numpy as np
@@ -153,10 +155,11 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     y_pred_closed = np.array(y_pred_closed_list)
     y_pred_ova = np.array(y_pred_ova_list)
 
-    #Calculate mean embedding of every id class
+    #Calculate mean embedding of every id class,
+    # and calculate the cosine similarity matrix
 
     class_features=defaultdict(lambda :np.array([]))
-    for label,f in zip( y_true_list,feat_list):
+    for label,f in zip( y_true,feat_list):
         if class_features[label].size==0:
             class_features[label]=f
         else:
@@ -166,7 +169,20 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
         class_mean_features[label] = np.mean(features, axis=0)
     # for label, mean_feature in class_mean_features.items():
     #     print(f"Class {label}: {mean_feature}")
+    class_labels = sorted(list(class_mean_features.keys()))
+    mean_embeddings = np.array([class_mean_features[label] for label in class_labels])
+    cosine_similarity_matrix = cosine_similarity(mean_embeddings)
+    results['cos_sim_mat']=cosine_similarity_matrix
 
+    # visualize cosine similarity matrix
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cosine_similarity_matrix, annot=True, cmap='coolwarm', xticklabels=class_labels,
+                yticklabels=class_labels)
+    plt.title("Cosine Similarity Matrix Heatmap")
+    plt.xlabel("Class Label")
+    plt.ylabel("Class Label")
+    plt.savefig(os.path.join(args.img_save_dir, 'visualize', "Cosine_Similarity_Matrix_Heatmap"))
+    plt.show()
 
     # Closed Accuracy on Closed Test Data
     y_true_closed = y_true[closed_mask]
@@ -177,6 +193,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     results['c_cfmat_c_p'] = closed_cfmat
 
     # Open Accuracy on Full Test Data
+    #Open confusion matrix
     open_acc = balanced_accuracy_score(y_true, y_pred_ova)
     open_cfmat = confusion_matrix(y_true, y_pred_ova, normalize=None)
     results['o_acc_f_hq'] = open_acc     # Open Accuracy on Full Test Data
@@ -261,7 +278,23 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
         results['o_acc_e_hq'] = open_acc
         results['o_cfmat_e_hq'] = open_cfmat
 
+        # calculate spearman similarity between confusion matrix and cosine similarity matrix
+
+        # normalize confusion matrix
+        cf_mat = np.array(open_cfmat)
+        min = cf_mat.min(axis=1, keepdims=True)
+        max = cf_mat.max(axis=1, keepdims=True)
+        normalized_cf_mat = (cf_mat - min) / (max - min)
+        # scale to [-1,1]
+        normalized_cf_mat = normalized_cf_mat * 2 - 1
+
+        # calculate spearman similarity
+        cf_mat_flatten = normalized_cf_mat.flatten()
+        cosine_similarity_matrix_flatten = cosine_similarity_matrix.flatten()
+        spearman_corr,spearman_p=spearmanr(cf_mat_flatten,cosine_similarity_matrix_flatten)
+
     print(f"#############################################################\n"
+          f"Spearman correaltion:{spearman_corr}   p-value:{spearman_p}\n"
           f" AUROC on original test dataset: {results['cifar_test_auroc'] * 100:.2f}\n"
           f" Closed Accuracy on Closed Test Data: {results['c_acc_c_p'] * 100:.2f}\n"
           f" Open Accuracy on Full Test Data:     {results['o_acc_f_hq'] * 100:.2f}\n"
@@ -360,6 +393,10 @@ def evaluate_io(args, net, dataset_dict, extended_test=True):
         o_acc_f_hq = balanced_accuracy_score(y_true, pred_hat_q)
         o_cfmat_f_q = confusion_matrix(y_true, pred_q, normalize='true')
         o_cfmat_f_hq = confusion_matrix(y_true, pred_hat_q, normalize='true')
+
+
+
+
 
         o_acc_e_q = o_acc_e_hq = 0
         o_cfmat_e_q = None
