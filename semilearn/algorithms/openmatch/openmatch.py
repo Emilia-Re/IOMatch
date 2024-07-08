@@ -89,7 +89,7 @@ class OpenMatchNet(nn.Module):
         feat = self.backbone(x, only_feat=True)
         logits = self.backbone(feat, only_fc=True)
         logits_open = self.ova_classifiers(feat)
-        return {'logits': logits, 'logits_open': logits_open,'feature':feat}
+        return {'logits': logits, 'logits_open': logits_open,'feat':feat}
 
     def group_matcher(self, coarse=False):
         matcher = self.backbone.group_matcher(coarse, prefix='backbone.')

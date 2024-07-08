@@ -1,5 +1,7 @@
 import os
 import sys
+from collections import defaultdict
+
 from tqdm import tqdm
 import pprint
 import numpy as np
@@ -135,6 +137,7 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
             y_true_list.extend(y.cpu().tolist())
             y_pred_closed_list.extend(pred_closed.cpu().tolist())
             y_pred_ova_list.extend(pred_open.cpu().tolist())
+    feat_list=np.vstack(feat_list)
     logit_list=np.vstack(logit_list)
     results['unk_scores_list']=np.array(unk_scores_list)
     y_true = np.array(y_true_list)
@@ -151,6 +154,18 @@ def evaluate_open(args,net, dataset_dict, num_classes, extended_test=True,):
     y_pred_ova = np.array(y_pred_ova_list)
 
     #Calculate mean embedding of every id class
+
+    class_features=defaultdict(lambda :np.array([]))
+    for label,f in zip( y_true_list,feat_list):
+        if class_features[label].size==0:
+            class_features[label]=f
+        else:
+            class_features[label]=np.vstack((class_features[label],f))
+    class_mean_features = {}
+    for label, features in class_features.items():
+        class_mean_features[label] = np.mean(features, axis=0)
+    # for label, mean_feature in class_mean_features.items():
+    #     print(f"Class {label}: {mean_feature}")
 
 
     # Closed Accuracy on Closed Test Data

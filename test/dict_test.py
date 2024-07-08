@@ -1,15 +1,26 @@
+import numpy as np
 from collections import defaultdict
 
-# 初始化 defaultdict，值为列表类型
-grouped_data = defaultdict(list)
+# 使用 lambda 函数创建默认值为空的 numpy 数组
+class_features = defaultdict(lambda: np.array([]))
 
-# 示例数据 (类别标签, 值)
-data_points = [('fruit', 'apple'), ('fruit', 'banana'), ('vegetable', 'carrot'), ('fruit', 'pear'), ('vegetable', 'lettuce')]
+# 示例数据：特征列表和对应的标签列表
+feature_list = [np.array([1.0, 2.0]), np.array([2.0, 3.0]), np.array([1.5, 2.5]), np.array([3.0, 4.0])]
+label_list = [0, 0, 1, 1]
 
-# 将数据点添加到对应的类别列表中
-for category, value in data_points:
-    grouped_data[category].append(value)
+# 将每个特征添加到对应类别的数组中
+for feature, label in zip(feature_list, label_list):
+    if class_features[label].size == 0:
+        class_features[label] = feature
+    else:
+        class_features[label] = np.vstack((class_features[label], feature))
 
-# 打印分组后的数据
-for category, values in grouped_data.items():
-    print(f"{category}: {values}")
+
+# 计算每个类别的特征平均值
+class_mean_features = {}
+for label, features in class_features.items():
+    class_mean_features[label] = np.mean(features, axis=0)
+
+# 打印每个类别的特征平均值
+for label, mean_feature in class_mean_features.items():
+    print(f"Class {label}: {mean_feature}")
